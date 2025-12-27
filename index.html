@@ -547,7 +547,11 @@
               ];
         });
         const [viewPath, setViewPath] = useState([]);
-        const [activeTopicId, setActiveTopicId] = useState("intro");
+        const params = new URLSearchParams(window.location.search);
+        const initialTopicFromURL = params.get("topic");
+        const [activeTopicId, setActiveTopicId] = useState(
+          initialTopicFromURL || "intro"
+        );
         const [editMode, setEditMode] = useState(false);
         const [themeKey, setThemeKey] = useState("paper");
         const [fontSize, setFontSize] = useState("medium");
@@ -662,6 +666,31 @@
             t.title.toLowerCase().includes(searchQuery.toLowerCase())
           );
         }, [topics, searchQuery]);
+
+        // Persist active topic to query param and validate it against current topics
+        useEffect(() => {
+          const params = new URLSearchParams(window.location.search);
+          if (activeTopicId) params.set("topic", activeTopicId);
+          else params.delete("topic");
+          const newQuery = params.toString();
+          const newUrl =
+            window.location.pathname + (newQuery ? "?" + newQuery : "");
+          window.history.replaceState({}, "", newUrl);
+        }, [activeTopicId]);
+
+        // If the URL contained an id that no longer exists in `topics`, fallback.
+        useEffect(() => {
+          if (!activeTopicId) {
+            const firstId = topics[0]?.id || null;
+            if (firstId) setActiveTopicId(firstId);
+            return;
+          }
+          const exists = findNode(topics, activeTopicId);
+          if (!exists) {
+            const firstId = topics[0]?.id || null;
+            setActiveTopicId(firstId);
+          }
+        }, [topics]);
 
         // --- HANDLERS ---
         const handleCreateTopic = (parentId) => {
@@ -1159,13 +1188,13 @@
               </span>
             )}
           </div>
-          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+          <div className="flex items-center md:opacity-0 md:group-hover:opacity-100 transition-opacity gap-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDrillDown();
               }}
-              className={`p-1 rounded ${
+              className={`p-1 rounded md:hidden ${
                 topic.id === activeId
                   ? "hover:bg-white/20"
                   : "hover:bg-t-border"
@@ -1179,7 +1208,7 @@
                 e.stopPropagation();
                 onDelete();
               }}
-              className={`p-1 rounded ${
+              className={`p-1 rounded hidden md:block ${
                 topic.id === activeId
                   ? "hover:bg-white/20"
                   : "hover:bg-t-border hover:text-red-500"
