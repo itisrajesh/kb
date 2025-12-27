@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dynamic Knowledge Base</title>
+
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css"
+      rel="stylesheet"
+      id="prism-theme"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              t: {
+                bg: "var(--bg)",
+                surface: "var(--surface)",
+                text: "var(--text)",
+                muted: "var(--muted)",
+                border: "var(--border)",
+                accent: "var(--accent)",
+                "accent-fg": "var(--accent-fg)",
+              },
+            },
+            animation: {
+              "slide-in": "slideIn 0.3s ease-out forwards",
+              "fade-in": "fadeIn 0.5s ease-out",
+              blob: "blob 20s infinite",
+            },
+            keyframes: {
+              slideIn: {
+                "0%": { transform: "translateX(20px)", opacity: "0" },
+                "100%": { transform: "translateX(0)", opacity: "1" },
+              },
+              fadeIn: {
+                "0%": { opacity: "0" },
+                "100%": { opacity: "1" },
+              },
+              blob: {
+                "0%": { transform: "translate(0px, 0px) scale(1)" },
+                "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                "100%": { transform: "translate(0px, 0px) scale(1)" },
+              },
+            },
+            typography: {
+              xs: {
+                css: {
+                  fontSize: '0.8125rem',
+                  h1: { fontSize: '1.25rem' },
+                  h2: { fontSize: '1rem' },
+                  h3: { fontSize: '0.9375rem' },
+                  code: { fontSize: '0.8125rem' },
+                  pre: { fontSize: '0.75rem' },
+                },
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      /* Smooth transitions */
+      body,
+      div,
+      button,
+      input,
+      textarea {
+        transition: background-color 0.3s ease, border-color 0.3s ease,
+          color 0.3s ease;
+      }
+
+      /* Glassmorphism */
+      .glass {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background: var(--surface-glass);
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--muted);
+      }
+
+      /* Prism Overrides */
+      pre[class*="language-"] {
+        background: transparent !important;
+        text-shadow: none !important;
+        margin: 0 !important;
+        padding: 1rem !important;
+      }
+
+      /* Base Variables */
+      :root {
+        --bg: #ffffff;
+        --surface: #f3f4f6;
+        --surface-glass: rgba(255, 255, 255, 0.8);
+        --text: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --accent: #3b82f6;
+        --accent-fg: #ffffff;
+      }
+    </style>
+  </head>
+
+  <body
+    class="min-h-screen font-sans bg-t-bg text-t-text overflow-x-hidden selection:bg-t-accent selection:text-t-accent-fg"
+  >
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useMemo } = React;
+
+      const THEMES = {
+        paper: {
+          label: "Paper",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#F9FAFB",
+            "--surface": "#FFFFFF",
+            "--surface-glass": "rgba(255, 255, 255, 0.9)",
+            "--text": "#1F2937",
+            "--muted": "#6B7280",
+            "--border": "#E5E7EB",
+            "--accent": "#2563EB",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css",
+          },
+        },
+
+        night: {
+          label: "Night",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#111827",
+            "--surface": "#1F2937",
+            "--surface-glass": "rgba(31, 41, 55, 0.8)",
+            "--text": "#F9FAFB",
+            "--muted": "#9CA3AF",
+            "--border": "#374151",
+            "--accent": "#60A5FA",
+            "--accent-fg": "#111827",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css",
+          },
+        },
+
+        forest: {
+          label: "Forest",
+          hasBlobs: false,
+          colors: {
+            "--bg": "#ECFDF5",
+            "--surface": "#D1FAE5",
+            "--surface-glass": "rgba(209, 250, 229, 0.9)",
+            "--text": "#064E3B",
+            "--muted": "#059669",
+            "--border": "#6EE7B7",
+            "--accent": "#059669",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css",
+          },
+        },
+
+        cyberpunk: {
+          label: "Cyberpunk",
+          hasBlobs: false,
+          colors: {
+            "--bg": "#0f0e17",
+            "--surface": "#23212d",
+            "--surface-glass": "rgba(35, 33, 45, 0.95)",
+            "--text": "#fffffe",
+            "--muted": "#a7a9be",
+            "--border": "#ff8906",
+            "--accent": "#ff006e",
+            "--accent-fg": "#fffffe",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css",
+          },
+        },
+
+        coffee: {
+          label: "Coffee",
+          hasBlobs: false,
+          colors: {
+            "--bg": "#F5F5F4",
+            "--surface": "#E7E5E4",
+            "--surface-glass": "rgba(231, 229, 228, 0.9)",
+            "--text": "#44403C",
+            "--muted": "#78716C",
+            "--border": "#D6D3D1",
+            "--accent": "#8C7851",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-coy.min.css",
+          },
+        },
+
+        sunset: {
+          label: "Sunset",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#FFF7ED",
+            "--surface": "#FFEDD5",
+            "--surface-glass": "rgba(255, 237, 213, 0.9)",
+            "--text": "#7C2D12",
+            "--muted": "#C2410C",
+            "--border": "#FDBA74",
+            "--accent": "#F97316",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-solarizedlight.min.css",
+          },
+        },
+
+        ocean: {
+          label: "Ocean",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#ECFEFF",
+            "--surface": "#CFFAFE",
+            "--surface-glass": "rgba(207, 250, 254, 0.9)",
+            "--text": "#083344",
+            "--muted": "#0E7490",
+            "--border": "#67E8F9",
+            "--accent": "#0284C7",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css",
+          },
+        },
+
+        rose: {
+          label: "Rose",
+          hasBlobs: false,
+          colors: {
+            "--bg": "#FFF1F2",
+            "--surface": "#FFE4E6",
+            "--surface-glass": "rgba(255, 228, 230, 0.9)",
+            "--text": "#881337",
+            "--muted": "#BE123C",
+            "--border": "#FDA4AF",
+            "--accent": "#E11D48",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css",
+          },
+        },
+
+        lavender: {
+          label: "Lavender",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#F5F3FF",
+            "--surface": "#EDE9FE",
+            "--surface-glass": "rgba(237, 233, 254, 0.9)",
+            "--text": "#4C1D95",
+            "--muted": "#6D28D9",
+            "--border": "#C4B5FD",
+            "--accent": "#7C3AED",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css",
+          },
+        },
+
+        matrix: {
+          label: "Matrix",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#020617",
+            "--surface": "#020617",
+            "--surface-glass": "rgba(2, 6, 23, 0.9)",
+            "--text": "#4ADE80",
+            "--muted": "#22C55E",
+            "--border": "#14532D",
+            "--accent": "#16A34A",
+            "--accent-fg": "#020617",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css",
+          },
+        },
+
+        desert: {
+          label: "Desert",
+          hasBlobs: true,
+          colors: {
+            "--bg": "#FFFBEB",
+            "--surface": "#FEF3C7",
+            "--surface-glass": "rgba(254, 243, 199, 0.9)",
+            "--text": "#78350F",
+            "--muted": "#B45309",
+            "--border": "#FCD34D",
+            "--accent": "#D97706",
+            "--accent-fg": "#FFFFFF",
+            "--prism":
+              "https://cdn.jsdelivr.net/npm/prismjs/themes/prism-coy.min.css",
+          },
+        },
+      };
+
+      const FONT_SIZES = {
+        xs: "prose-xs",
+        small: "prose-sm",
+        medium: "prose-base",
+        large: "prose-lg",
+        xl: "prose-xl",
+      };
+
+      // --- UTILS ---
+      const generateId = () => Math.random().toString(36).substr(2, 9);
+      const toPascalCase = (str) => {
+        if (!str) return "Circle";
+        return str.replace(/(^\w|-\w)/g, (clear) =>
+          clear.replace(/-/, "").toUpperCase()
+        );
+      };
+
+      // --- COMPONENTS ---
+
+      // 1. Icon Component (Safe SVG Injection)
+      const Icon = ({ name, size = 16, className = "" }) => {
+        const pascalName = toPascalCase(name);
+        const iconData = lucide.icons[pascalName] || lucide.icons.Circle;
+        const svgString = iconData
+          ? `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${className}">${iconData
+              .map(
+                (child) =>
+                  `<${child[0]} ${Object.entries(child[1])
+                    .map(([k, v]) => `${k}="${v}"`)
+                    .join(" ")} />`
+              )
+              .join("")}</svg>`
+          : "";
+        return (
+          <span
+            dangerouslySetInnerHTML={{ __html: svgString }}
+            className="flex items-center justify-center inline-block"
+          />
+        );
+      };
+
+      // 2. Markdown Viewer
+      const MarkdownViewer = ({ content, fontSizeClass }) => {
+        const ref = useRef(null);
+        useEffect(() => {
+          if (ref.current) Prism.highlightAllUnder(ref.current);
+        }, [content]);
+        return (
+          <div
+            ref={ref}
+            className={`prose max-w-none text-t-text prose-headings:text-t-text prose-strong:text-t-text prose-code:text-t-accent prose-a:text-t-accent ${fontSizeClass}`}
+            dangerouslySetInnerHTML={{ __html: marked.parse(content) }}
+          />
+        );
+      };
+
+      // 3. Settings Modal
+      const SettingsModal = ({
+        isOpen,
+        onClose,
+        currentTheme,
+        onSetTheme,
+        onImport,
+        onExport,
+        fontSize,
+        onSetFontSize,
+        blobAnimationEnabled,
+        onSetBlobAnimation,
+      }) => {
+        if (!isOpen) return null;
+        return (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
+            onClick={onClose}
+          >
+            <div
+              className="bg-t-surface border border-t-border rounded-xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <Icon name="settings" /> Settings
+              </h2>
+
+              {/* Theme Section */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-t-muted mb-2">
+                  Theme
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(THEMES).map(([key, theme]) => (
+                    <button
+                      key={key}
+                      onClick={() => onSetTheme(key)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2
+                                            ${
+                                              currentTheme === key
+                                                ? "bg-t-accent text-t-accent-fg ring-2 ring-offset-2 ring-t-accent"
+                                                : "bg-t-bg text-t-text hover:bg-t-border border border-transparent"
+                                            }`}
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ background: theme.colors["--accent"] }}
+                      ></div>
+                      {theme.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Blob Animation Toggle Button */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-t-muted mb-2">
+                  Blob Animation
+                </label>
+                <button
+                  onClick={() => onSetBlobAnimation(!blobAnimationEnabled)}
+                  className={`w-full py-2 px-4 text-sm rounded-lg border transition mb-6 ${
+                    blobAnimationEnabled
+                      ? "bg-t-accent text-t-accent-fg ring-2 ring-offset-2 ring-t-accent"
+                      : "bg-t-bg text-t-text hover:bg-t-border border border-transparent"
+                  }`}
+                >
+                  {blobAnimationEnabled
+                    ? "Disable Blob Animation"
+                    : "Enable Blob Animation"}
+                </button>
+              </div>
+
+              {/* Font Size Section */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-t-muted mb-2">
+                  Readability (Font Size)
+                </label>
+                <div className="flex bg-t-bg rounded-lg border border-t-border p-1">
+                  {[ "xs", "small", "medium", "large", "xl"].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => onSetFontSize(size)}
+                      className={`flex-1 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
+                        fontSize === size
+                          ? "bg-t-accent text-t-accent-fg shadow-sm"
+                          : "text-t-muted hover:text-t-text"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Data Section */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-t-muted">
+                  Data Management
+                </label>
+                <div className="flex gap-3">
+                  <label className="flex-1 cursor-pointer bg-t-bg hover:bg-t-border border border-t-border text-t-text py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition text-sm font-medium">
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".json"
+                      onChange={onImport}
+                    />
+                    <Icon name="upload" size={16} /> Import
+                  </label>
+                  <button
+                    onClick={onExport}
+                    className="flex-1 bg-t-bg hover:bg-t-border border border-t-border text-t-text py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition text-sm font-medium"
+                  >
+                    <Icon name="download" size={16} /> Export
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-t-muted hover:text-t-text"
+              >
+                <Icon name="x" />
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      // --- MAIN APPLICATION ---
+      const App = () => {
+        // State
+        const [topics, setTopics] = useState(() => {
+          const saved = localStorage.getItem("kb_data");
+          return saved
+            ? JSON.parse(saved)
+            : [
+                {
+                  id: "intro",
+                  title: "Introduction",
+                  icon: "book",
+                  completed: false,
+                  children: [],
+                  blocks: [
+                    {
+                      id: "b1",
+                      content:
+                        "# Welcome\nThis is your knowledge base. Click **Edit** to start writing.",
+                    },
+                  ],
+                },
+              ];
+        });
+        const [viewPath, setViewPath] = useState([]);
+        const [activeTopicId, setActiveTopicId] = useState("intro");
+        const [editMode, setEditMode] = useState(false);
+        const [themeKey, setThemeKey] = useState("paper");
+        const [fontSize, setFontSize] = useState("medium");
+        const [searchQuery, setSearchQuery] = useState("");
+        const [blobAnimationEnabled, setBlobAnimationEnabled] = useState(
+          true ? THEMES[themeKey].hasBlobs : false
+        );
+        const [tempTopicData, setTempTopicData] = useState(null);
+        const [settingsOpen, setSettingsOpen] = useState(false);
+        const [scrollProgress, setScrollProgress] = useState(0);
+        const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar state
+
+        // --- EFFECTS ---
+        useEffect(
+          () => localStorage.setItem("kb_data", JSON.stringify(topics)),
+          [topics]
+        );
+
+        // Theme Application
+        useEffect(() => {
+          const theme = THEMES[themeKey];
+          const root = document.documentElement;
+          Object.entries(theme.colors).forEach(([key, val]) => {
+            if (key !== "--prism") root.style.setProperty(key, val);
+          });
+          document.getElementById("prism-theme").href = theme.colors["--prism"];
+        }, [themeKey]);
+
+        // Scroll Tracking
+        useEffect(() => {
+          const handleScroll = () => {
+            const totalScroll = document.documentElement.scrollTop;
+            const windowHeight =
+              document.documentElement.scrollHeight -
+              document.documentElement.clientHeight;
+            const scroll = windowHeight > 0 ? totalScroll / windowHeight : 0;
+            setScrollProgress(scroll);
+          };
+          window.addEventListener("scroll", handleScroll);
+          return () => window.removeEventListener("scroll", handleScroll);
+        }, []);
+
+        // --- HELPERS ---
+        const findNode = (nodes, id) => {
+          for (let node of nodes) {
+            if (node.id === id) return node;
+            if (node.children.length) {
+              const found = findNode(node.children, id);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+
+        const updateTree = (nodes, id, updateFn) => {
+          return nodes.map((node) => {
+            if (node.id === id) return updateFn(node);
+            if (node.children.length)
+              return {
+                ...node,
+                children: updateTree(node.children, id, updateFn),
+              };
+            return node;
+          });
+        };
+
+        const deleteFromTree = (nodes, id) => {
+          return nodes
+            .filter((n) => n.id !== id)
+            .map((n) => ({ ...n, children: deleteFromTree(n.children, id) }));
+        };
+
+        const activeTopic = useMemo(
+          () => findNode(topics, activeTopicId),
+          [topics, activeTopicId]
+        );
+
+        const topParentName = useMemo(() => {
+          if (viewPath.length > 0) {
+            const root = findNode(topics, viewPath[0]);
+            return root ? root.title : "Knowledge Base";
+          }
+          if (activeTopic) {
+            const isRoot = topics.find((t) => t.id === activeTopicId);
+            return isRoot ? isRoot.title : "Knowledge Base";
+          }
+          return "Knowledge Base";
+        }, [viewPath, activeTopic, topics]);
+
+        const currentSidebarList = useMemo(() => {
+          if (viewPath.length === 0) return topics;
+          let current = topics;
+          for (let id of viewPath) {
+            const node = findNode(current, id);
+            if (node) current = node.children;
+            else return [];
+          }
+          return current;
+        }, [topics, viewPath]);
+
+        const flatten = (nodes) => {
+          let res = [];
+          nodes.forEach((n) => {
+            res.push(n);
+            res = [...res, ...flatten(n.children)];
+          });
+          return res;
+        };
+        const searchResults = useMemo(() => {
+          if (!searchQuery) return [];
+          return flatten(topics).filter((t) =>
+            t.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }, [topics, searchQuery]);
+
+        // --- HANDLERS ---
+        const handleCreateTopic = (parentId) => {
+          const newTopic = {
+            id: generateId(),
+            title: "New Topic",
+            icon: "file",
+            completed: false,
+            children: [],
+            blocks: [{ id: generateId(), content: "Start writing..." }],
+          };
+          if (viewPath.length === 0) setTopics([...topics, newTopic]);
+          else
+            setTopics(
+              updateTree(topics, viewPath[viewPath.length - 1], (n) => ({
+                ...n,
+                children: [...n.children, newTopic],
+              }))
+            );
+        };
+
+        const handleExport = () => {
+          const dataStr =
+            "data:text/json;charset=utf-8," +
+            encodeURIComponent(JSON.stringify(topics));
+          const node = document.createElement("a");
+          node.href = dataStr;
+          node.download = "kb_backup.json";
+          node.click();
+        };
+
+        const handleImport = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try {
+              setTopics(JSON.parse(ev.target.result));
+              alert("Imported!");
+              setSettingsOpen(false);
+            } catch (err) {
+              alert("Invalid JSON");
+            }
+          };
+          reader.readAsText(file);
+        };
+
+        // --- RENDER ---
+        return (
+          <div className="relative min-h-screen transition-colors duration-500">
+            {/* BACKGROUND BLOBS (Visible only on specific themes) */}
+            {blobAnimationEnabled && (
+              <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-0 left-1/4 w-96 h-96 bg-t-accent rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-t-border rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-500"></div>
+                <div className="absolute -bottom-8 left-20 w-72 h-72 bg-t-accent rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-1000"></div>
+              </div>
+            )}
+
+            {/* SCROLL PROGRESS BAR */}
+            <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
+              <div
+                className="h-full bg-t-accent transition-all duration-100 ease-out"
+                style={{ width: `${scrollProgress * 100}%` }}
+              ></div>
+            </div>
+
+            {/* NAVBAR */}
+            <nav className="sticky top-0 z-[20] w-full glass">
+              <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Hamburger (Mobile) */}
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="md:hidden p-2 text-t-text hover:bg-t-border rounded-lg"
+                  >
+                    <Icon name="menu" size={24} />
+                  </button>
+
+                  <div className="p-2 bg-t-surface rounded-lg text-t-accent border border-t-border hidden md:block">
+                    <Icon name="rainbow" size={24} />
+                  </div>
+                  <div className="overflow-hidden">
+                    <h1 className="text-lg font-bold tracking-tight truncate max-w-[200px] md:max-w-none">
+                      {topParentName}
+                    </h1>
+                    {activeTopic && topParentName !== activeTopic.title && (
+                      <p className="text-xs text-t-muted flex items-center gap-1 truncate">
+                        <Icon name="corner-down-right" size={10} />{" "}
+                        {activeTopic.title}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 md:gap-4">
+                  <div className="hidden md:flex flex-col items-end mr-2">
+                    <span className="text-[10px] font-mono text-t-muted uppercase tracking-wider">
+                      Progress
+                    </span>
+                    <span className="text-sm font-bold text-t-accent">
+                      {Math.round(scrollProgress * 100)}%
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSettingsOpen(true)}
+                    className="p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                  >
+                    <Icon name="settings" />
+                  </button>
+                </div>
+              </div>
+            </nav>
+
+            {/* MOBILE SIDEBAR OVERLAY */}
+            {sidebarOpen && (
+              <div
+                className="fixed inset-0 z-[20] bg-black/50 md:hidden backdrop-blur-sm"
+                onClick={() => setSidebarOpen(false)}
+              ></div>
+            )}
+
+            {/* MAIN LAYOUT */}
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row relative z-21">
+              {/* SIDEBAR (Collapsible on Mobile, Sticky on Desktop) */}
+              <aside
+                className={`
+                            fixed inset-y-0 left-0 z-[100] md:z-[19] w-72 bg-t-surface/95 backdrop-blur-xl border-r border-t-border transform transition-transform duration-300 ease-in-out
+                            md:translate-x-0 md:static md:w-80 md:h-[calc(100vh-4rem)] md:sticky md:top-16 md:bg-t-bg/50 md:backdrop-blur-sm
+                            ${
+                              sidebarOpen
+                                ? "translate-x-0"
+                                : "-translate-x-full"
+                            }
+                        `}
+              >
+                <div className="flex flex-col h-full p-4">
+                  <div className="flex items-center justify-between mb-4 md:hidden">
+                    <span className="font-bold text-t-text">Menu</span>
+                    <button onClick={() => setSidebarOpen(false)}>
+                      <Icon name="x" />
+                    </button>
+                  </div>
+
+                  {/* Search */}
+                  <div className="relative mb-4 shrink-0">
+                    <input
+                      type="text"
+                      placeholder="Search topics..."
+                      className="w-full bg-t-surface border border-t-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-t-accent focus:ring-1 focus:ring-t-accent transition-all"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <div className="absolute left-3 top-2.5 text-t-muted">
+                      <Icon name="search" size={14} />
+                    </div>
+                  </div>
+
+                  {/* Back Button */}
+                  {!searchQuery && viewPath.length > 0 && (
+                    <button
+                      onClick={() => setViewPath(viewPath.slice(0, -1))}
+                      className="flex items-center gap-2 mb-4 text-sm font-medium text-t-accent hover:underline shrink-0"
+                    >
+                      <Icon name="arrow-left" size={14} /> Back to Parent
+                    </button>
+                  )}
+
+                  {/* List */}
+                  <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+                    {(searchQuery ? searchResults : currentSidebarList).map(
+                      (topic) => (
+                        <SidebarItem
+                          key={topic.id}
+                          topic={topic}
+                          activeId={activeTopicId}
+                          onClick={() => {
+                            setActiveTopicId(topic.id);
+                            setEditMode(false);
+                            if (window.innerWidth < 768) setSidebarOpen(false);
+                          }}
+                          onDrillDown={() =>
+                            setViewPath([...viewPath, topic.id])
+                          }
+                          onDelete={() => {
+                            if (confirm("Delete this topic and subtopics?")) {
+                              setTopics(deleteFromTree(topics, topic.id));
+                              if (activeTopicId === topic.id)
+                                setActiveTopicId(null);
+                            }
+                          }}
+                        />
+                      )
+                    )}
+                    {currentSidebarList.length === 0 && !searchQuery && (
+                      <div className="text-center py-10 text-t-muted text-sm italic">
+                        Empty Folder
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add Button */}
+                  {!searchQuery && (
+                    <button
+                      onClick={() => handleCreateTopic()}
+                      className="mt-4 w-full py-2.5 bg-t-surface border border-t-border hover:border-t-accent text-t-text rounded-lg flex items-center justify-center gap-2 font-medium transition shadow-sm shrink-0"
+                    >
+                      <Icon name="plus" size={16} /> Add Topic
+                    </button>
+                  )}
+                </div>
+              </aside>
+
+              {/* CONTENT AREA */}
+              <main className="flex-1 p-4 md:p-12 min-h-[calc(100vh-4rem)]">
+                {activeTopic ? (
+                  <div className="max-w-3xl mx-auto animate-fade-in pb-20">
+                    {/* Content Header */}
+                    <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-t-border pb-6 mb-8 gap-4">
+                      <div className="flex-1 min-w-0">
+                        {editMode ? (
+                          <div className="space-y-4">
+                            <input
+                              className="text-3xl md:text-4xl font-bold bg-transparent border-b-2 border-t-accent w-full focus:outline-none pb-2 text-t-text"
+                              value={tempTopicData.title}
+                              onChange={(e) =>
+                                setTempTopicData({
+                                  ...tempTopicData,
+                                  title: e.target.value,
+                                })
+                              }
+                            />
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-t-muted">
+                                Icon:
+                              </span>
+                              <input
+                                className="bg-t-surface border border-t-border rounded px-2 py-1 text-sm focus:outline-none focus:border-t-accent"
+                                value={tempTopicData.icon}
+                                onChange={(e) =>
+                                  setTempTopicData({
+                                    ...tempTopicData,
+                                    icon: e.target.value,
+                                  })
+                                }
+                                placeholder="e.g. book, code"
+                              />
+                              <Icon
+                                name={tempTopicData.icon}
+                                className="text-t-accent"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-t-surface rounded-xl border border-t-border text-t-accent shadow-sm hidden md:block">
+                              <Icon name={activeTopic.icon} size={32} />
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-bold text-t-text break-words">
+                              {activeTopic.title}
+                            </h1>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-start">
+                        {editMode ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setTopics(
+                                  updateTree(
+                                    topics,
+                                    activeTopic.id,
+                                    () => tempTopicData
+                                  )
+                                );
+                                setEditMode(false);
+                              }}
+                              className="h-10 px-4 bg-t-accent text-t-accent-fg rounded-lg font-medium shadow-md hover:brightness-110 transition text-sm flex items-center justify-center"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditMode(false)}
+                              className="h-10 px-4 bg-t-surface border border-t-border text-t-text rounded-lg font-medium hover:bg-t-border transition text-sm flex items-center justify-center"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() =>
+                                setTopics(
+                                  updateTree(topics, activeTopic.id, (n) => ({
+                                    ...n,
+                                    completed: !n.completed,
+                                  }))
+                                )
+                              }
+                              className={`h-10 w-10 flex items-center justify-center rounded-lg border transition ${
+                                activeTopic.completed
+                                  ? "bg-green-100 border-green-300 text-green-700"
+                                  : "bg-t-surface border-t-border text-t-muted hover:text-t-text"
+                              }`}
+                              title={
+                                activeTopic.completed
+                                  ? "Mark Incomplete"
+                                  : "Mark Complete"
+                              }
+                            >
+                              <Icon
+                                name={
+                                  activeTopic.completed
+                                    ? "check-circle-2"
+                                    : "circle"
+                                }
+                                size={20}
+                              />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setTempTopicData(activeTopic);
+                                setEditMode(true);
+                              }}
+                              className="h-10 px-4 bg-t-accent text-t-accent-fg rounded-lg font-medium shadow hover:brightness-110 transition flex items-center gap-2 text-sm"
+                            >
+                              <Icon name="edit-2" size={16} />{" "}
+                              <span className="hidden sm:inline">Edit</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content Blocks */}
+                    <div className="space-y-8">
+                      {(editMode
+                        ? tempTopicData.blocks
+                        : activeTopic.blocks
+                      ).map((block, idx) => (
+                        <div key={block.id} className="group relative">
+                          {editMode ? (
+                            <div className="bg-t-surface p-4 rounded-xl border border-t-border shadow-sm">
+                              <div className="flex justify-end gap-2 mb-2 opacity-50 group-hover:opacity-100 transition">
+                                <button
+                                  onClick={() => {
+                                    const newBlocks = [...tempTopicData.blocks];
+                                    if (idx > 0) {
+                                      [newBlocks[idx], newBlocks[idx - 1]] = [
+                                        newBlocks[idx - 1],
+                                        newBlocks[idx],
+                                      ];
+                                      setTempTopicData({
+                                        ...tempTopicData,
+                                        blocks: newBlocks,
+                                      });
+                                    }
+                                  }}
+                                  className="p-1 hover:text-t-accent"
+                                >
+                                  <Icon name="arrow-up" size={14} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const newBlocks = [...tempTopicData.blocks];
+                                    if (idx < tempTopicData.blocks.length - 1) {
+                                      [newBlocks[idx], newBlocks[idx + 1]] = [
+                                        newBlocks[idx + 1],
+                                        newBlocks[idx],
+                                      ];
+                                      setTempTopicData({
+                                        ...tempTopicData,
+                                        blocks: newBlocks,
+                                      });
+                                    }
+                                  }}
+                                  className="p-1 hover:text-t-accent"
+                                >
+                                  <Icon name="arrow-down" size={14} />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setTempTopicData({
+                                      ...tempTopicData,
+                                      blocks: tempTopicData.blocks.filter(
+                                        (b) => b.id !== block.id
+                                      ),
+                                    })
+                                  }
+                                  className="p-1 text-red-400 hover:text-red-600"
+                                >
+                                  <Icon name="trash-2" size={14} />
+                                </button>
+                              </div>
+                              <textarea
+                                className="w-full bg-transparent resize-none focus:outline-none font-mono text-sm min-h-[240px] text-t-text"
+                                value={block.content}
+                                onChange={(e) => {
+                                  const newBlocks = tempTopicData.blocks.map(
+                                    (b) =>
+                                      b.id === block.id
+                                        ? { ...b, content: e.target.value }
+                                        : b
+                                  );
+                                  setTempTopicData({
+                                    ...tempTopicData,
+                                    blocks: newBlocks,
+                                  });
+                                }}
+                                placeholder="Type Markdown content here..."
+                              />
+                            </div>
+                          ) : (
+                            <MarkdownViewer
+                              content={block.content}
+                              fontSizeClass={FONT_SIZES[fontSize]}
+                            />
+                          )}
+                        </div>
+                      ))}
+
+                      {editMode && (
+                        <button
+                          onClick={() =>
+                            setTempTopicData({
+                              ...tempTopicData,
+                              blocks: [
+                                ...tempTopicData.blocks,
+                                { id: generateId(), content: "" },
+                              ],
+                            })
+                          }
+                          className="w-full py-4 border-2 border-dashed border-t-border rounded-xl text-t-muted hover:border-t-accent hover:text-t-accent transition flex items-center justify-center gap-2"
+                        >
+                          <Icon name="plus" /> Add Content Block
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-[50vh] flex flex-col items-center justify-center text-t-muted">
+                    <Icon name="layout" size={64} className="mb-4 opacity-20" />
+                    <p>Select a topic from the menu</p>
+                  </div>
+                )}
+              </main>
+            </div>
+
+            <SettingsModal
+              isOpen={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              currentTheme={themeKey}
+              onSetTheme={setThemeKey}
+              fontSize={fontSize}
+              onSetFontSize={setFontSize}
+              onImport={handleImport}
+              onExport={handleExport}
+              blobAnimationEnabled={blobAnimationEnabled}
+              onSetBlobAnimation={setBlobAnimationEnabled}
+            />
+          </div>
+        );
+      };
+
+      const SidebarItem = ({
+        topic,
+        activeId,
+        onClick,
+        onDrillDown,
+        onDelete,
+      }) => (
+        <div
+          className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${
+            topic.id === activeId
+              ? "bg-t-accent text-t-accent-fg shadow-md"
+              : "text-t-text hover:bg-t-surface hover:text-t-accent"
+          }`}
+          onClick={onClick}
+          onDoubleClick={onDrillDown}
+        >
+          <div className="flex items-center gap-3 overflow-hidden flex-1">
+            <Icon name={topic.icon} size={16} />
+            <span className="truncate text-sm font-medium select-none">{topic.title}</span>
+            {topic.children.length > 0 && (
+              <span
+                className={`text-[10px] px-1.5 rounded-full ${
+                  topic.id === activeId
+                    ? "bg-white/20"
+                    : "bg-t-border text-t-muted"
+                }`}
+              >
+                {topic.children.length}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDrillDown();
+              }}
+              className={`p-1 rounded ${
+                topic.id === activeId
+                  ? "hover:bg-white/20"
+                  : "hover:bg-t-border"
+              }`}
+              title="Open Subtopics"
+            >
+              <Icon name="chevron-right" size={14} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className={`p-1 rounded ${
+                topic.id === activeId
+                  ? "hover:bg-white/20"
+                  : "hover:bg-t-border hover:text-red-500"
+              }`}
+            >
+              <Icon name="trash-2" size={14} />
+            </button>
+          </div>
+        </div>
+      );
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
