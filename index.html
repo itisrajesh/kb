@@ -33,6 +33,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 
     <script>
       tailwind.config = {
@@ -130,6 +131,17 @@
         padding: 1rem !important;
       }
 
+      /* Mermaid Diagram Styles */
+      .mermaid {
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
+      }
+
+      svg[id^="mermaid"] {
+        border-radius: 8px;
+      }
+
       /* Base Variables */
       :root {
         --bg: #ffffff;
@@ -150,6 +162,20 @@
     <div id="root"></div>
 
     <script type="text/babel">
+      // Initialize mermaid
+      mermaid.initialize({ startOnLoad: false, theme: 'default' });
+      
+      // Configure marked to handle mermaid code blocks
+      const renderer = new marked.Renderer();
+      const originalCode = renderer.code.bind(renderer);
+      renderer.code = function({ text, lang, escaped }) {
+        if (lang === 'mermaid') {
+          return `<div class="mermaid">${text}</div>`;
+        }
+        return originalCode({ text, lang, escaped });
+      };
+      marked.setOptions({ renderer });
+      
       const { useState, useEffect, useRef, useMemo } = React;
 
       const THEMES = {
@@ -386,7 +412,13 @@
       const MarkdownViewer = ({ content, fontSizeClass }) => {
         const ref = useRef(null);
         useEffect(() => {
-          if (ref.current) Prism.highlightAllUnder(ref.current);
+          if (ref.current) {
+            Prism.highlightAllUnder(ref.current);
+            // Render mermaid diagrams
+            setTimeout(() => {
+              mermaid.run().catch(err => console.error('Mermaid error:', err));
+            }, 0);
+          }
         }, [content]);
         return (
           <div
@@ -583,6 +615,9 @@
             if (key !== "--prism") root.style.setProperty(key, val);
           });
           document.getElementById("prism-theme").href = theme.colors["--prism"];
+          // Update mermaid theme based on selected theme
+          const mermaidTheme = themeKey === 'night' || themeKey === 'cyberpunk' ? 'dark' : 'default';
+          mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
         }, [themeKey]);
 
         // Scroll Tracking
