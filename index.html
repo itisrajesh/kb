@@ -156,6 +156,73 @@
         --accent: #3b82f6;
         --accent-fg: #ffffff;
       }
+      /* Sidebar slide animations */
+      .sidebar-list-wrapper {
+        position: relative;
+        height: 100%;
+      }
+      .sidebar-list-pane {
+        position: absolute;
+        inset: 0;
+        will-change: transform, opacity;
+      }
+
+      @keyframes slideInFromRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0%);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOutToLeft {
+        from {
+          transform: translateX(0%);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+      }
+
+      @keyframes slideInFromLeft {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0%);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOutToRight {
+        from {
+          transform: translateX(0%);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      .slide-in-from-right {
+        animation: slideInFromRight 280ms ease-out forwards;
+      }
+      .slide-out-to-left {
+        animation: slideOutToLeft 280ms ease-out forwards;
+      }
+      .slide-in-from-left {
+        animation: slideInFromLeft 280ms ease-out forwards;
+      }
+      .slide-out-to-right {
+        animation: slideOutToRight 280ms ease-out forwards;
+      }
     </style>
   </head>
 
@@ -606,6 +673,9 @@
         const [settingsOpen, setSettingsOpen] = useState(false);
         const [scrollProgress, setScrollProgress] = useState(0);
         const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar state
+        const [animatingSidebar, setAnimatingSidebar] = useState(false);
+        const [prevSidebarList, setPrevSidebarList] = useState([]);
+        const [navDirection, setNavDirection] = useState("forward");
 
         // --- EFFECTS ---
         useEffect(
@@ -742,6 +812,36 @@
         }, [topics]);
 
         // --- HANDLERS ---
+        const handleDrillDown = (id) => {
+          if (searchQuery) {
+            // avoid animating while searching
+            setViewPath([...viewPath, id]);
+            return;
+          }
+          setPrevSidebarList(currentSidebarList);
+          setNavDirection("forward");
+          setAnimatingSidebar(true);
+          setViewPath([...viewPath, id]);
+          setTimeout(() => {
+            setAnimatingSidebar(false);
+            setPrevSidebarList([]);
+          }, 300);
+        };
+
+        const handleBack = () => {
+          if (searchQuery) {
+            setViewPath(viewPath.slice(0, -1));
+            return;
+          }
+          setPrevSidebarList(currentSidebarList);
+          setNavDirection("back");
+          setAnimatingSidebar(true);
+          setViewPath(viewPath.slice(0, -1));
+          setTimeout(() => {
+            setAnimatingSidebar(false);
+            setPrevSidebarList([]);
+          }, 300);
+        };
         const handleCreateTopic = (parentId) => {
           const newTopic = {
             id: generateId(),
@@ -901,7 +1001,7 @@
                   {/* Back Button */}
                   {!searchQuery && viewPath.length > 0 && (
                     <button
-                      onClick={() => setViewPath(viewPath.slice(0, -1))}
+                      onClick={handleBack}
                       className="flex items-center gap-2 mb-4 text-sm font-medium text-t-accent hover:underline shrink-0"
                     >
                       <Icon name="arrow-left" size={14} /> Back to Parent
@@ -910,35 +1010,103 @@
 
                   {/* List */}
                   <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-1">
-                    {(searchQuery ? searchResults : currentSidebarList).map(
-                      (topic) => (
-                        <SidebarItem
-                          key={topic.id}
-                          topic={topic}
-                          activeId={activeTopicId}
-                          onClick={() => {
-                            setActiveTopicId(topic.id);
-                            setEditMode(false);
-                            if (window.innerWidth < 768) setSidebarOpen(false);
-                          }}
-                          onDrillDown={() =>
-                            setViewPath([...viewPath, topic.id])
-                          }
-                          onDelete={() => {
-                            if (confirm("Delete this topic and subtopics?")) {
-                              setTopics(deleteFromTree(topics, topic.id));
-                              if (activeTopicId === topic.id)
-                                setActiveTopicId(null);
-                            }
-                          }}
-                        />
-                      )
-                    )}
-                    {currentSidebarList.length === 0 && !searchQuery && (
-                      <div className="text-center py-10 text-t-muted text-sm italic">
-                        Empty Folder
-                      </div>
-                    )}
+                    <div className="sidebar-list-wrapper h-full">
+                      {!animatingSidebar && (
+                        <div className="relative h-full">
+                          {(searchQuery ? searchResults : currentSidebarList).map(
+                            (topic) => (
+                              <SidebarItem
+                                key={topic.id}
+                                topic={topic}
+                                activeId={activeTopicId}
+                                onClick={() => {
+                                  setActiveTopicId(topic.id);
+                                  setEditMode(false);
+                                  if (window.innerWidth < 768) setSidebarOpen(false);
+                                }}
+                                onDrillDown={() => handleDrillDown(topic.id)}
+                                onDelete={() => {
+                                  if (confirm("Delete this topic and subtopics?")) {
+                                    setTopics(deleteFromTree(topics, topic.id));
+                                    if (activeTopicId === topic.id)
+                                      setActiveTopicId(null);
+                                  }
+                                }}
+                              />
+                            )
+                          )}
+                          {currentSidebarList.length === 0 && !searchQuery && (
+                            <div className="text-center py-10 text-t-muted text-sm italic">
+                              Empty Folder
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {animatingSidebar && (
+                        <>
+                          <div
+                            className={`sidebar-list-pane ${{
+                              forward: "slide-out-to-left",
+                              back: "slide-out-to-right",
+                            }[navDirection]}`}
+                          >
+                            {(searchQuery ? searchResults : prevSidebarList).map(
+                              (topic) => (
+                                <SidebarItem
+                                  key={"prev-" + topic.id}
+                                  topic={topic}
+                                  activeId={activeTopicId}
+                                  onClick={() => {
+                                    setActiveTopicId(topic.id);
+                                    setEditMode(false);
+                                    if (window.innerWidth < 768) setSidebarOpen(false);
+                                  }}
+                                  onDrillDown={() => handleDrillDown(topic.id)}
+                                  onDelete={() => {
+                                    if (confirm("Delete this topic and subtopics?")) {
+                                      setTopics(deleteFromTree(topics, topic.id));
+                                      if (activeTopicId === topic.id)
+                                        setActiveTopicId(null);
+                                    }
+                                  }}
+                                />
+                              )
+                            )}
+                          </div>
+
+                          <div
+                            className={`sidebar-list-pane ${{
+                              forward: "slide-in-from-right",
+                              back: "slide-in-from-left",
+                            }[navDirection]}`}
+                          >
+                            {(searchQuery ? searchResults : currentSidebarList).map(
+                              (topic) => (
+                                <SidebarItem
+                                  key={topic.id}
+                                  topic={topic}
+                                  activeId={activeTopicId}
+                                  onClick={() => {
+                                    setActiveTopicId(topic.id);
+                                    setEditMode(false);
+                                    if (window.innerWidth < 768) setSidebarOpen(false);
+                                  }}
+                                  onDrillDown={() => handleDrillDown(topic.id)}
+                                  onDelete={() => {
+                                    if (confirm("Delete this topic and subtopics?")) {
+                                      setTopics(deleteFromTree(topics, topic.id));
+                                      if (activeTopicId === topic.id)
+                                        setActiveTopicId(null);
+                                    }
+                                  }}
+                                />
+                              )
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Add Button */}
