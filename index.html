@@ -767,8 +767,8 @@
           // Update meta theme-color so browsers' UI matches the app accent
           try {
             const themeMeta = document.querySelector('meta[name="theme-color"]');
-            if (themeMeta && theme.colors && theme.colors["--accent"]) {
-              themeMeta.setAttribute('content', theme.colors["--accent"]);
+            if (themeMeta && theme.colors && theme.colors["--surface-glass"]) {
+              themeMeta.setAttribute('content', theme.colors["--surface-glass"]);
             }
           } catch (e) {}
         }, [themeKey]);
