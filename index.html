@@ -56,7 +56,7 @@
             animation: {
               "slide-in": "slideIn 0.3s ease-out forwards",
               "fade-in": "fadeIn 0.5s ease-out",
-              blob: "blob 20s infinite",
+              blob: "blob 25s infinite",
             },
             keyframes: {
               slideIn: {
@@ -155,6 +155,18 @@
         --border: #e5e7eb;
         --accent: #3b82f6;
         --accent-fg: #ffffff;
+      }
+      /* Blob rendering improvements to reduce pixelation on some displays
+         - promote blobs to their own compositing layer
+         - hint the browser about changing properties for smoother animation
+      */
+      .animate-blob {
+        will-change: transform, filter, opacity;
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        image-rendering: auto;
       }
       /* Sidebar slide animations */
       .sidebar-list-wrapper {
@@ -525,10 +537,18 @@
               className="bg-t-surface border border-t-border rounded-xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Icon name="settings" /> Settings
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Icon name="settings" size={20} /> Settings
+                </h2>
 
+                <button
+                  onClick={onClose}
+                  className="text-t-muted hover:text-t-text hover:bg-t-border p-2 rounded-full transition"
+                >
+                  <Icon name="x" size={20} />
+                </button>
+              </div>
               {/* Theme Section */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-t-muted mb-2">
@@ -620,13 +640,6 @@
                   </button>
                 </div>
               </div>
-
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 text-t-muted hover:text-t-text"
-              >
-                <Icon name="x" />
-              </button>
             </div>
           </div>
         );
@@ -663,11 +676,27 @@
           initialTopicFromURL || "intro"
         );
         const [editMode, setEditMode] = useState(false);
-        const [themeKey, setThemeKey] = useState("paper");
-        const [fontSize, setFontSize] = useState("medium");
+        const loadSetting = (key, fallback) => {
+          try {
+            const v = localStorage.getItem(key);
+            return v !== null ? JSON.parse(v) : fallback;
+          } catch (e) {
+            return fallback;
+          }
+        };
+
+        const [themeKey, setThemeKey] = useState(() =>
+          loadSetting("kb_theme", "paper")
+        );
+        const [fontSize, setFontSize] = useState(() =>
+          loadSetting("kb_fontSize", "medium")
+        );
         const [searchQuery, setSearchQuery] = useState("");
-        const [blobAnimationEnabled, setBlobAnimationEnabled] = useState(
-          true ? THEMES[themeKey].hasBlobs : false
+        const [blobAnimationEnabled, setBlobAnimationEnabled] = useState(() =>
+          loadSetting(
+            "kb_blobAnimation",
+            THEMES[loadSetting("kb_theme", "paper")].hasBlobs
+          )
         );
         const [tempTopicData, setTempTopicData] = useState(null);
         const [settingsOpen, setSettingsOpen] = useState(false);
@@ -682,6 +711,28 @@
           () => localStorage.setItem("kb_data", JSON.stringify(topics)),
           [topics]
         );
+
+        // Persist UI preferences: theme, font size, blob animation
+        useEffect(() => {
+          try {
+            localStorage.setItem("kb_theme", JSON.stringify(themeKey));
+          } catch (e) {}
+        }, [themeKey]);
+
+        useEffect(() => {
+          try {
+            localStorage.setItem("kb_fontSize", JSON.stringify(fontSize));
+          } catch (e) {}
+        }, [fontSize]);
+
+        useEffect(() => {
+          try {
+            localStorage.setItem(
+              "kb_blobAnimation",
+              JSON.stringify(blobAnimationEnabled)
+            );
+          } catch (e) {}
+        }, [blobAnimationEnabled]);
 
         // Theme Application
         useEffect(() => {
@@ -890,12 +941,96 @@
         // --- RENDER ---
         return (
           <div className="relative min-h-screen transition-colors duration-500">
-            {/* BACKGROUND BLOBS (Visible only on specific themes) */}
+            {/* BACKGROUND BLOBS (SVG, visible only on specific themes) */}
             {blobAnimationEnabled && (
               <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-t-accent rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-t-border rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-500"></div>
-                <div className="absolute -bottom-8 left-20 w-72 h-72 bg-t-accent rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-1000"></div>
+                <svg
+                  className="absolute inset-0 w-full h-full"
+                  viewBox="0 0 1200 800"
+                  preserveAspectRatio="xMidYMid slice"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <defs>
+                    <filter
+                      id="kb-blob-blur"
+                      x="-50%"
+                      y="-50%"
+                      width="200%"
+                      height="200%"
+                      filterUnits="objectBoundingBox"
+                    >
+                      <feGaussianBlur
+                        in="SourceGraphic"
+                        stdDeviation="40"
+                        result="blur"
+                      />
+                      <feColorMatrix
+                        in="blur"
+                        type="matrix"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.9 0"
+                        result="faded"
+                      />
+                      <feMerge>
+                        <feMergeNode in="faded" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <g
+                    filter="url(#kb-blob-blur)"
+                    style={{ mixBlendMode: "multiply" }}
+                  >
+                    <g
+                      className="animate-blob"
+                      style={{
+                        transformOrigin: "300px 200px",
+                        animationDelay: "0s",
+                      }}
+                    >
+                      <circle
+                        cx="300"
+                        cy="200"
+                        r="220"
+                        fill="var(--accent)"
+                        opacity="0.18"
+                      />
+                    </g>
+
+                    <g
+                      className="animate-blob"
+                      style={{
+                        transformOrigin: "900px 400px",
+                        animationDelay: "0.5s",
+                      }}
+                    >
+                      <circle
+                        cx="900"
+                        cy="400"
+                        r="260"
+                        fill="var(--border)"
+                        opacity="0.28"
+                      />
+                    </g>
+
+                    <g
+                      className="animate-blob"
+                      style={{
+                        transformOrigin: "250px 650px",
+                        animationDelay: "1s",
+                      }}
+                    >
+                      <circle
+                        cx="250"
+                        cy="650"
+                        r="180"
+                        fill="var(--accent)"
+                        opacity="0.18"
+                      />
+                    </g>
+                  </g>
+                </svg>
               </div>
             )}
 
@@ -946,9 +1081,13 @@
                   </div>
                   <button
                     onClick={() => setSettingsOpen(true)}
-                    className="p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                    className="md:p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
                   >
-                    <Icon name="settings" />
+                    <Icon
+                      name="settings"
+                      size={20}
+                      className="transition md:scale-[0.9] scale-100"
+                    />
                   </button>
                 </div>
               </div>
@@ -1013,28 +1152,32 @@
                     <div className="sidebar-list-wrapper h-full">
                       {!animatingSidebar && (
                         <div className="relative h-full">
-                          {(searchQuery ? searchResults : currentSidebarList).map(
-                            (topic) => (
-                              <SidebarItem
-                                key={topic.id}
-                                topic={topic}
-                                activeId={activeTopicId}
-                                onClick={() => {
-                                  setActiveTopicId(topic.id);
-                                  setEditMode(false);
-                                  if (window.innerWidth < 768) setSidebarOpen(false);
-                                }}
-                                onDrillDown={() => handleDrillDown(topic.id)}
-                                onDelete={() => {
-                                  if (confirm("Delete this topic and subtopics?")) {
-                                    setTopics(deleteFromTree(topics, topic.id));
-                                    if (activeTopicId === topic.id)
-                                      setActiveTopicId(null);
-                                  }
-                                }}
-                              />
-                            )
-                          )}
+                          {(searchQuery
+                            ? searchResults
+                            : currentSidebarList
+                          ).map((topic) => (
+                            <SidebarItem
+                              key={topic.id}
+                              topic={topic}
+                              activeId={activeTopicId}
+                              onClick={() => {
+                                setActiveTopicId(topic.id);
+                                setEditMode(false);
+                                if (window.innerWidth < 768)
+                                  setSidebarOpen(false);
+                              }}
+                              onDrillDown={() => handleDrillDown(topic.id)}
+                              onDelete={() => {
+                                if (
+                                  confirm("Delete this topic and subtopics?")
+                                ) {
+                                  setTopics(deleteFromTree(topics, topic.id));
+                                  if (activeTopicId === topic.id)
+                                    setActiveTopicId(null);
+                                }
+                              }}
+                            />
+                          ))}
                           {currentSidebarList.length === 0 && !searchQuery && (
                             <div className="text-center py-10 text-t-muted text-sm italic">
                               Empty Folder
@@ -1046,63 +1189,75 @@
                       {animatingSidebar && (
                         <>
                           <div
-                            className={`sidebar-list-pane ${{
-                              forward: "slide-out-to-left",
-                              back: "slide-out-to-right",
-                            }[navDirection]}`}
+                            className={`sidebar-list-pane ${
+                              {
+                                forward: "slide-out-to-left",
+                                back: "slide-out-to-right",
+                              }[navDirection]
+                            }`}
                           >
-                            {(searchQuery ? searchResults : prevSidebarList).map(
-                              (topic) => (
-                                <SidebarItem
-                                  key={"prev-" + topic.id}
-                                  topic={topic}
-                                  activeId={activeTopicId}
-                                  onClick={() => {
-                                    setActiveTopicId(topic.id);
-                                    setEditMode(false);
-                                    if (window.innerWidth < 768) setSidebarOpen(false);
-                                  }}
-                                  onDrillDown={() => handleDrillDown(topic.id)}
-                                  onDelete={() => {
-                                    if (confirm("Delete this topic and subtopics?")) {
-                                      setTopics(deleteFromTree(topics, topic.id));
-                                      if (activeTopicId === topic.id)
-                                        setActiveTopicId(null);
-                                    }
-                                  }}
-                                />
-                              )
-                            )}
+                            {(searchQuery
+                              ? searchResults
+                              : prevSidebarList
+                            ).map((topic) => (
+                              <SidebarItem
+                                key={"prev-" + topic.id}
+                                topic={topic}
+                                activeId={activeTopicId}
+                                onClick={() => {
+                                  setActiveTopicId(topic.id);
+                                  setEditMode(false);
+                                  if (window.innerWidth < 768)
+                                    setSidebarOpen(false);
+                                }}
+                                onDrillDown={() => handleDrillDown(topic.id)}
+                                onDelete={() => {
+                                  if (
+                                    confirm("Delete this topic and subtopics?")
+                                  ) {
+                                    setTopics(deleteFromTree(topics, topic.id));
+                                    if (activeTopicId === topic.id)
+                                      setActiveTopicId(null);
+                                  }
+                                }}
+                              />
+                            ))}
                           </div>
 
                           <div
-                            className={`sidebar-list-pane ${{
-                              forward: "slide-in-from-right",
-                              back: "slide-in-from-left",
-                            }[navDirection]}`}
+                            className={`sidebar-list-pane ${
+                              {
+                                forward: "slide-in-from-right",
+                                back: "slide-in-from-left",
+                              }[navDirection]
+                            }`}
                           >
-                            {(searchQuery ? searchResults : currentSidebarList).map(
-                              (topic) => (
-                                <SidebarItem
-                                  key={topic.id}
-                                  topic={topic}
-                                  activeId={activeTopicId}
-                                  onClick={() => {
-                                    setActiveTopicId(topic.id);
-                                    setEditMode(false);
-                                    if (window.innerWidth < 768) setSidebarOpen(false);
-                                  }}
-                                  onDrillDown={() => handleDrillDown(topic.id)}
-                                  onDelete={() => {
-                                    if (confirm("Delete this topic and subtopics?")) {
-                                      setTopics(deleteFromTree(topics, topic.id));
-                                      if (activeTopicId === topic.id)
-                                        setActiveTopicId(null);
-                                    }
-                                  }}
-                                />
-                              )
-                            )}
+                            {(searchQuery
+                              ? searchResults
+                              : currentSidebarList
+                            ).map((topic) => (
+                              <SidebarItem
+                                key={topic.id}
+                                topic={topic}
+                                activeId={activeTopicId}
+                                onClick={() => {
+                                  setActiveTopicId(topic.id);
+                                  setEditMode(false);
+                                  if (window.innerWidth < 768)
+                                    setSidebarOpen(false);
+                                }}
+                                onDrillDown={() => handleDrillDown(topic.id)}
+                                onDelete={() => {
+                                  if (
+                                    confirm("Delete this topic and subtopics?")
+                                  ) {
+                                    setTopics(deleteFromTree(topics, topic.id));
+                                    if (activeTopicId === topic.id)
+                                      setActiveTopicId(null);
+                                  }
+                                }}
+                              />
+                            ))}
                           </div>
                         </>
                       )}
