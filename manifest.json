@@ -1,7 +1,8 @@
 {
   "name": "Knowledge Base",
   "short_name": "KB",
-  "start_url": ".",
+  "start_url": "index.html",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#F9FAFB",
   "theme_color": "#2563EB",
