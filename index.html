@@ -538,9 +538,19 @@
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold flex items-center gap-2">
+                <button className="text-xl font-bold flex items-center gap-2 md:cursor-default"
+                onClick={(e)=>{
+                  // full screen mode toggle
+                  e.preventDefault();
+                  if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                  } else {
+                    document.exitFullscreen();
+                  }
+                }}
+                >
                   <Icon name="settings" size={20} /> Settings
-                </h2>
+                </button>
 
                 <button
                   onClick={onClose}
