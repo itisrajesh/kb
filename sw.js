@@ -1,36 +1,66 @@
-const CACHE_NAME = 'kb-cache-v1';
-// Only precache explicit files. Avoid '/' as it can 404 depending on server.
-const PRECACHE_URLS = ['/index.html'];
+const CACHE_NAME = 'kb-cache-v2';
+const PRECACHE_URLS = ['./index.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    for (const url of PRECACHE_URLS) {
-      try {
-        // Fetch with no-cache so we get a fresh copy during install
-        const resp = await fetch(url, { cache: 'no-cache' });
-        if (!resp || !resp.ok) {
-          console.warn('SW: precache failed for', url, resp && resp.status);
-          continue;
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      for (const url of PRECACHE_URLS) {
+        try {
+          const resp = await fetch(url, { cache: 'no-cache' });
+          if (resp && resp.ok) {
+            await cache.put(url, resp.clone());
+            console.log('✓ SW cached:', url);
+          } else {
+            console.warn('SW: failed to cache', url, resp?.status);
+          }
+        } catch (err) {
+          console.warn('SW: fetch error for', url, err.message);
         }
-        await cache.put(url, resp.clone());
-      } catch (err) {
-        console.warn('SW: precache fetch error for', url, err);
       }
+    } catch (err) {
+      console.error('SW install error:', err);
     }
-    await self.skipWaiting();
+    return self.skipWaiting();
   })());
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter((name) => name !== CACHE_NAME)
+        .map((name) => caches.delete(name))
+    );
+    return self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).catch(() => caches.match('/index.html'));
-    })
+    caches.match(request)
+      .then((cached) => {
+        if (cached) return cached;
+        return fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+          .catch(() => {
+            if (request.mode === 'navigate') {
+              return caches.match('./index.html');
+            }
+            return new Response('Offline', { status: 503 });
+          });
+      })
   );
 });
