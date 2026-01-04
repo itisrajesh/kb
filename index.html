@@ -156,13 +156,7 @@
       }
 
       /* Scrollbar */
-      /* Standard scrollbar styling (Firefox and newer Chromium on Windows) */
-      html {
-        scrollbar-width: thin;
-        scrollbar-color: var(--border) transparent;
-      }
-      
-      /* WebKit scrollbar styling (Safari and Chrome on macOS) */
+      /* WebKit scrollbar styling (Chrome, Edge, Safari) */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -176,6 +170,12 @@
       }
       ::-webkit-scrollbar-thumb:hover {
         background: var(--muted);
+      }
+      
+      /* Firefox scrollbar styling */
+      html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
       }
 
       /* Prism Overrides */
