@@ -156,6 +156,13 @@
       }
 
       /* Scrollbar */
+      /* Standard scrollbar styling (Firefox and newer Chromium on Windows) */
+      html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+      }
+      
+      /* WebKit scrollbar styling (Safari and Chrome on macOS) */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
