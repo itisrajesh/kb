@@ -46,11 +46,11 @@
 
     <!-- Register service worker early for better PWA support on Android -->
     <script>
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         navigator.serviceWorker
-          .register('sw.js')
-          .then(() => console.log('✓ Service worker registered'))
-          .catch((err) => console.warn('✗ SW registration failed', err));
+          .register("sw.js")
+          .then(() => console.log("✓ Service worker registered"))
+          .catch((err) => console.warn("✗ SW registration failed", err));
       }
     </script>
 
@@ -171,7 +171,7 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--muted);
       }
-      
+
       /* Firefox scrollbar styling */
       html {
         scrollbar-width: thin;
@@ -591,16 +591,17 @@
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <button className="text-xl font-bold flex items-center gap-2 md:cursor-default"
-                onDoubleClick={(e)=>{
-                  // full screen mode toggle
-                  e.preventDefault();
-                  if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                  } else {
-                    document.exitFullscreen();
-                  }
-                }}
+                <button
+                  className="text-xl font-bold flex items-center gap-2 md:cursor-default"
+                  onDoubleClick={(e) => {
+                    // full screen mode toggle
+                    e.preventDefault();
+                    if (!document.fullscreenElement) {
+                      document.documentElement.requestFullscreen();
+                    } else {
+                      document.exitFullscreen();
+                    }
+                  }}
                 >
                   <Icon name="settings" size={20} /> Settings
                 </button>
@@ -768,6 +769,15 @@
         const [animatingSidebar, setAnimatingSidebar] = useState(false);
         const [prevSidebarList, setPrevSidebarList] = useState([]);
         const [navDirection, setNavDirection] = useState("forward");
+        const [isSafari, setIsSafari] = useState(false);
+
+        useEffect(() => {
+          // Detect Safari specifically
+          const ua = navigator.userAgent.toLowerCase();
+          const isSafariCheck =
+            ua.indexOf("safari") > -1 && ua.indexOf("chrome") < 0;
+          setIsSafari(isSafariCheck);
+        }, []);
 
         // --- EFFECTS ---
         useEffect(
@@ -813,14 +823,19 @@
           mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
           // Update meta theme-color so browsers' UI matches the app accent
           try {
-            const themeMeta = document.querySelector('meta[name="theme-color"]');
+            const themeMeta = document.querySelector(
+              'meta[name="theme-color"]'
+            );
             if (themeMeta && theme.colors && theme.colors["--surface-glass"]) {
-              themeMeta.setAttribute('content', theme.colors["--surface-glass"]);
+              themeMeta.setAttribute(
+                "content",
+                theme.colors["--surface-glass"]
+              );
             }
           } catch (e) {}
         }, [themeKey]);
 
-        // Scroll Tracking
+        // Scroll Tracking & Memory
         useEffect(() => {
           const handleScroll = () => {
             const totalScroll = document.documentElement.scrollTop;
@@ -829,10 +844,30 @@
               document.documentElement.clientHeight;
             const scroll = windowHeight > 0 ? totalScroll / windowHeight : 0;
             setScrollProgress(scroll);
+            // Save scroll position to localStorage
+            localStorage.setItem(
+              `kb_scroll_${activeTopicId}`,
+              JSON.stringify(totalScroll)
+            );
           };
           window.addEventListener("scroll", handleScroll);
           return () => window.removeEventListener("scroll", handleScroll);
-        }, []);
+        }, [activeTopicId]);
+
+        // Restore scroll position when topic changes
+        useEffect(() => {
+          const savedScroll = localStorage.getItem(
+            `kb_scroll_${activeTopicId}`
+          );
+          if (savedScroll !== null) {
+            const scrollPos = JSON.parse(savedScroll);
+            setTimeout(() => {
+              window.scrollTo(0, scrollPos);
+            }, 100);
+          } else {
+            window.scrollTo(0, 0);
+          }
+        }, [activeTopicId]);
 
         // --- HELPERS ---
         const findNode = (nodes, id) => {
@@ -1011,148 +1046,189 @@
         // --- RENDER ---
         return (
           <div className="relative min-h-screen transition-colors duration-500">
-            {/* BACKGROUND BLOBS (SVG, visible only on specific themes) */}
+            {/* BACKGROUND BLOBS (Conditional Rendering) */}
             {blobAnimationEnabled && (
-              <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                <svg
-                  className="absolute inset-0 w-full h-full"
-                  viewBox="0 0 1200 800"
-                  preserveAspectRatio="xMidYMid slice"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  focusable="false"
-                  style={{ filter: "url(#kb-blob-blur-main)" }}
-                >
-                  <defs>
-                    <filter
-                      id="kb-blob-blur-main"
-                      x="-100%"
-                      y="-100%"
-                      width="300%"
-                      height="300%"
-                      filterUnits="objectBoundingBox"
-                      primitiveUnits="userSpaceOnUse"
-                    >
-                      <feGaussianBlur
-                        in="SourceGraphic"
-                        stdDeviation="80"
+              <>
+                {isSafari ? (
+                  // SAFARI VERSION: Uses CSS Divs + Blur (Fixes square edges in Safari)
+                  <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                    <div className="absolute inset-0 w-full h-full blur-[80px] md:blur-[120px] opacity-60">
+                      <div
+                        className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full mix-blend-multiply animate-blob"
+                        style={{
+                          backgroundColor: "var(--accent)",
+                          opacity: 0.35,
+                        }}
                       />
-                    </filter>
-                  </defs>
-
-                  <g style={{ mixBlendMode: "multiply" }}>
-                    <g
-                      className="animate-blob"
-                      style={{
-                        transformOrigin: "600px 400px",
-                        animationDelay: "0s",
-                        WebkitTransformStyle: "preserve-3d",
-                      }}
-                    >
-                      <circle
-                        cx="300"
-                        cy="200"
-                        r="220"
-                        fill="var(--accent)"
-                        opacity="0.18"
-                        style={{ isolation: "isolate" }}
+                      <div
+                        className="absolute top-[-10%] right-[10%] w-[600px] h-[600px] rounded-full mix-blend-multiply [animation:blob2_40s_infinite]"
+                        style={{
+                          backgroundColor: "var(--border)",
+                          opacity: 0.45,
+                        }}
                       />
-                    </g>
-
-                    <g
-                      className="[animation:blob2_40s_infinite]"
-                      style={{
-                        transformOrigin: "600px 400px",
-                        animationDelay: "0s",
-                        WebkitTransformStyle: "preserve-3d",
-                      }}
-                    >
-                      <circle
-                        cx="900"
-                        cy="400"
-                        r="260"
-                        fill="var(--border)"
-                        opacity="0.28"
-                        style={{ isolation: "isolate" }}
+                      <div
+                        className="absolute bottom-[-20%] left-[10%] w-[600px] h-[600px] rounded-full mix-blend-multiply [animation:blob3_45s_infinite]"
+                        style={{
+                          backgroundColor: "var(--accent)",
+                          opacity: 0.35,
+                        }}
                       />
-                    </g>
-
-                    <g
-                      className="[animation:blob3_45s_infinite]"
-                      style={{
-                        transformOrigin: "600px 400px",
-                        animationDelay: "0s",
-                        WebkitTransformStyle: "preserve-3d",
-                      }}
-                    >
-                      <circle
-                        cx="250"
-                        cy="650"
-                        r="180"
-                        fill="var(--accent)"
-                        opacity="0.18"
-                        style={{ isolation: "isolate" }}
+                      <div
+                        className="absolute top-[30%] left-[40%] w-[400px] h-[400px] rounded-full mix-blend-multiply animate-blob"
+                        style={{
+                          backgroundColor: "var(--accent)",
+                          opacity: 0.25,
+                          animationDelay: "3s",
+                        }}
                       />
-                    </g>
-
-                    <g
-                      className="animate-blob"
-                      style={{
-                        transformOrigin: "600px 400px",
-                        animationDelay: "3s",
-                        WebkitTransformStyle: "preserve-3d",
-                      }}
-                    >
-                      <circle
-                        cx="600"
-                        cy="300"
-                        r="190"
-                        fill="var(--accent)"
-                        opacity="0.12"
-                        style={{ isolation: "isolate" }}
+                      <div
+                        className="absolute bottom-[10%] right-[20%] w-[500px] h-[500px] rounded-full mix-blend-multiply [animation:blob2_40s_infinite]"
+                        style={{
+                          backgroundColor: "var(--border)",
+                          opacity: 0.3,
+                          animationDelay: "2s",
+                        }}
                       />
-                    </g>
-
-                    <g
-                      className="[animation:blob2_40s_infinite]"
-                      style={{
-                        transformOrigin: "600px 400px",
-                        animationDelay: "2s",
-                        WebkitTransformStyle: "preserve-3d",
-                      }}
+                    </div>
+                  </div>
+                ) : (
+                  // CHROME/OTHERS VERSION: Uses SVG Filter (Smoother gradients on Chrome)
+                  <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                    <svg
+                      className="absolute inset-0 w-full h-full"
+                      viewBox="0 0 1200 800"
+                      preserveAspectRatio="xMidYMid slice"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                      focusable="false"
+                      style={{ filter: "url(#kb-blob-blur-main)" }}
                     >
-                      <circle
-                        cx="750"
-                        cy="550"
-                        r="200"
-                        fill="var(--border)"
-                        opacity="0.15"
-                        style={{ isolation: "isolate" }}
-                      />
-                    </g>
-
-                    <g
-                      className="[animation:blob3_45s_infinite]"
-                      style={{
-                        transformOrigin: "600px 400px",
-                        animationDelay: "1s",
-                        WebkitTransformStyle: "preserve-3d",
-                      }}
-                    >
-                      <circle
-                        cx="450"
-                        cy="550"
-                        r="210"
-                        fill="var(--accent)"
-                        opacity="0.12"
-                        style={{ isolation: "isolate" }}
-                      />
-                    </g>
-                  </g>
-                </svg>
-              </div>
+                      <defs>
+                        <filter
+                          id="kb-blob-blur-main"
+                          x="-100%"
+                          y="-100%"
+                          width="300%"
+                          height="300%"
+                          filterUnits="objectBoundingBox"
+                          primitiveUnits="userSpaceOnUse"
+                        >
+                          <feGaussianBlur
+                            in="SourceGraphic"
+                            stdDeviation="110"
+                          />
+                        </filter>
+                      </defs>
+                      <g style={{ mixBlendMode: "multiply" }}>
+                        <g
+                          className="animate-blob"
+                          style={{
+                            transformOrigin: "600px 400px",
+                            animationDelay: "0s",
+                            WebkitTransformStyle: "preserve-3d",
+                          }}
+                        >
+                          <circle
+                            cx="300"
+                            cy="200"
+                            r="220"
+                            fill="var(--accent)"
+                            opacity="0.18"
+                            style={{ isolation: "isolate" }}
+                          />
+                        </g>
+                        <g
+                          className="[animation:blob2_40s_infinite]"
+                          style={{
+                            transformOrigin: "600px 400px",
+                            animationDelay: "0s",
+                            WebkitTransformStyle: "preserve-3d",
+                          }}
+                        >
+                          <circle
+                            cx="900"
+                            cy="400"
+                            r="260"
+                            fill="var(--border)"
+                            opacity="0.28"
+                            style={{ isolation: "isolate" }}
+                          />
+                        </g>
+                        <g
+                          className="[animation:blob3_45s_infinite]"
+                          style={{
+                            transformOrigin: "600px 400px",
+                            animationDelay: "0s",
+                            WebkitTransformStyle: "preserve-3d",
+                          }}
+                        >
+                          <circle
+                            cx="250"
+                            cy="650"
+                            r="180"
+                            fill="var(--accent)"
+                            opacity="0.18"
+                            style={{ isolation: "isolate" }}
+                          />
+                        </g>
+                        <g
+                          className="animate-blob"
+                          style={{
+                            transformOrigin: "600px 400px",
+                            animationDelay: "3s",
+                            WebkitTransformStyle: "preserve-3d",
+                          }}
+                        >
+                          <circle
+                            cx="600"
+                            cy="300"
+                            r="190"
+                            fill="var(--accent)"
+                            opacity="0.12"
+                            style={{ isolation: "isolate" }}
+                          />
+                        </g>
+                        <g
+                          className="[animation:blob2_40s_infinite]"
+                          style={{
+                            transformOrigin: "600px 400px",
+                            animationDelay: "2s",
+                            WebkitTransformStyle: "preserve-3d",
+                          }}
+                        >
+                          <circle
+                            cx="750"
+                            cy="550"
+                            r="200"
+                            fill="var(--border)"
+                            opacity="0.15"
+                            style={{ isolation: "isolate" }}
+                          />
+                        </g>
+                        <g
+                          className="[animation:blob3_45s_infinite]"
+                          style={{
+                            transformOrigin: "600px 400px",
+                            animationDelay: "1s",
+                            WebkitTransformStyle: "preserve-3d",
+                          }}
+                        >
+                          <circle
+                            cx="450"
+                            cy="550"
+                            r="210"
+                            fill="var(--accent)"
+                            opacity="0.12"
+                            style={{ isolation: "isolate" }}
+                          />
+                        </g>
+                      </g>
+                    </svg>
+                  </div>
+                )}
+              </>
             )}
-
             {/* SCROLL PROGRESS BAR */}
             <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
               <div
@@ -1716,14 +1792,14 @@
       const root = ReactDOM.createRoot(document.getElementById("root"));
       root.render(<App />);
     </script>
-        <script>
-          // Register service worker
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker
-              .register('sw.js')
-              .then(() => console.log('Service worker registered'))
-              .catch((err) => console.warn('SW registration failed', err));
-          }
-         </script>
+    <script>
+      // Register service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("sw.js")
+          .then(() => console.log("Service worker registered"))
+          .catch((err) => console.warn("SW registration failed", err));
+      }
+    </script>
   </body>
 </html>
