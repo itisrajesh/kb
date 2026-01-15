@@ -736,9 +736,16 @@
         const [viewPath, setViewPath] = useState([]);
         const params = new URLSearchParams(window.location.search);
         const initialTopicFromURL = params.get("topic");
-        const [activeTopicId, setActiveTopicId] = useState(
-          initialTopicFromURL || "intro"
-        );
+        const [activeTopicId, setActiveTopicId] = useState(() => {
+          // Priority: URL > localStorage (last active) > default
+          if (initialTopicFromURL) return initialTopicFromURL;
+          try {
+            const lastActive = localStorage.getItem("kb_lastActiveTopic");
+            return lastActive || "intro";
+          } catch (e) {
+            return "intro";
+          }
+        });
         const [editMode, setEditMode] = useState(false);
         const loadSetting = (key, fallback) => {
           try {
@@ -797,6 +804,13 @@
             localStorage.setItem("kb_fontSize", JSON.stringify(fontSize));
           } catch (e) {}
         }, [fontSize]);
+
+        // Persist the last active topic ID
+        useEffect(() => {
+          try {
+            localStorage.setItem("kb_lastActiveTopic", activeTopicId);
+          } catch (e) {}
+        }, [activeTopicId]);
 
         useEffect(() => {
           try {
