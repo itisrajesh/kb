@@ -1859,77 +1859,80 @@
         onDragLeave,
         onDrop,
       }) => (
-        <div
-          className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-move ${
-            isDragOver ? "bg-t-accent/20 border-2 border-t-accent" : "border border-transparent"
-          } ${
-            isDragged ? "opacity-40" : ""
-          } ${
-            topic.id === activeId
-              ? "bg-t-accent text-t-accent-fg shadow-md"
-              : "text-t-text hover:bg-t-surface hover:text-t-accent"
-          }`}
-          onClick={onClick}
-          onDoubleClick={onDrillDown}
-          draggable
-          onDragStart={() => onDragStart(topic.id)}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
-            onDragOver(topic.id);
-          }}
-          onDragLeave={() => onDragLeave()}
-          onDrop={(e) => {
-            e.preventDefault();
-            onDrop(topic.id);
-          }}
-        >
-          <div className="flex items-center gap-3 overflow-hidden flex-1">
-            <Icon name={topic.icon} size={16} />
-            <span className="truncate text-sm font-medium select-none">
-              {topic.title}
-            </span>
-            {topic.children.length > 0 && (
-              <span
-                className={`text-[10px] px-1.5 rounded-full ${
+        <div>
+          <div
+            className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-move ${
+              isDragged ? "opacity-40" : ""
+            } ${
+              topic.id === activeId
+                ? "bg-t-accent text-t-accent-fg shadow-md"
+                : "text-t-text hover:bg-t-surface hover:text-t-accent"
+            }`}
+            onClick={onClick}
+            onDoubleClick={onDrillDown}
+            draggable
+            onDragStart={() => onDragStart(topic.id)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              onDragOver(topic.id);
+            }}
+            onDragLeave={() => onDragLeave()}
+            onDrop={(e) => {
+              e.preventDefault();
+              onDrop(topic.id);
+            }}
+          >
+            <div className="flex items-center gap-3 overflow-hidden flex-1">
+              <Icon name={topic.icon} size={16} />
+              <span className="truncate text-sm font-medium select-none">
+                {topic.title}
+              </span>
+              {topic.children.length > 0 && (
+                <span
+                  className={`text-[10px] px-1.5 rounded-full ${
+                    topic.id === activeId
+                      ? "bg-white/20"
+                      : "bg-t-border text-t-muted"
+                  }`}
+                >
+                  {topic.children.length}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center md:opacity-0 md:group-hover:opacity-100 transition-opacity gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDrillDown();
+                }}
+                className={`p-1 rounded md:hidden ${
                   topic.id === activeId
-                    ? "bg-white/20"
-                    : "bg-t-border text-t-muted"
+                    ? "hover:bg-white/20"
+                    : "hover:bg-t-border"
+                }`}
+                title="Open Subtopics"
+              >
+                <Icon name="chevron-right" size={14} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className={`p-1 rounded hidden md:block ${
+                  topic.id === activeId
+                    ? "hover:bg-white/20"
+                    : "hover:bg-t-border hover:text-red-500"
                 }`}
               >
-                {topic.children.length}
-              </span>
-            )}
+                <Icon name="trash-2" size={14} />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center md:opacity-0 md:group-hover:opacity-100 transition-opacity gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDrillDown();
-              }}
-              className={`p-1 rounded md:hidden ${
-                topic.id === activeId
-                  ? "hover:bg-white/20"
-                  : "hover:bg-t-border"
-              }`}
-              title="Open Subtopics"
-            >
-              <Icon name="chevron-right" size={14} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className={`p-1 rounded hidden md:block ${
-                topic.id === activeId
-                  ? "hover:bg-white/20"
-                  : "hover:bg-t-border hover:text-red-500"
-              }`}
-            >
-              <Icon name="trash-2" size={14} />
-            </button>
-          </div>
+          {isDragOver && (
+            <div className="h-0.5 bg-t-accent my-1 rounded-full"></div>
+          )}
         </div>
       );
 
