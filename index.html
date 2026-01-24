@@ -777,6 +777,8 @@
         const [prevSidebarList, setPrevSidebarList] = useState([]);
         const [navDirection, setNavDirection] = useState("forward");
         const [isSafari, setIsSafari] = useState(false);
+        const [draggedId, setDraggedId] = useState(null);
+        const [dragOverId, setDragOverId] = useState(null);
 
         useEffect(() => {
           // Detect Safari specifically
@@ -911,6 +913,73 @@
           return nodes
             .filter((n) => n.id !== id)
             .map((n) => ({ ...n, children: deleteFromTree(n.children, id) }));
+        };
+
+        const moveItemInTree = (nodes, draggedId, targetId, currentPath) => {
+          // Find and remove the dragged item from its current location
+          let draggedItem = null;
+          const removeFromTree = (nodeList) => {
+            return nodeList.filter((n) => {
+              if (n.id === draggedId) {
+                draggedItem = n;
+                return false;
+              }
+              n.children = removeFromTree(n.children);
+              return true;
+            });
+          };
+
+          let result = removeFromTree(nodes);
+
+          if (!draggedItem) return nodes;
+
+          // Find the target parent and insert after target
+          const insertIntoTree = (nodeList, path = []) => {
+            return nodeList.map((n) => {
+              if (n.id === targetId) {
+                // Insert into the same parent as target, after target
+                const parentPath = path;
+                return insertAfterTarget(nodeList, draggedItem, targetId);
+              }
+              n.children = insertIntoTree(n.children, [...path, n.id]);
+              return n;
+            });
+          };
+
+          // Helper to insert after target in a list
+          const insertAfterInList = (list, draggedItem, targetId) => {
+            const idx = list.findIndex((n) => n.id === targetId);
+            if (idx !== -1) {
+              const newList = [...list];
+              newList.splice(idx + 1, 0, draggedItem);
+              return newList;
+            }
+            return list;
+          };
+
+          // Find where to insert based on current path
+          if (currentPath.length === 0) {
+            // Top level
+            result = insertAfterInList(result, draggedItem, targetId);
+          } else {
+            // Nested level
+            result = updateTree(result, currentPath[currentPath.length - 1], (n) => ({
+              ...n,
+              children: insertAfterInList(n.children, draggedItem, targetId),
+            }));
+          }
+
+          return result;
+        };
+
+        const insertAfterTarget = (list, draggedItem, targetId) => {
+          const idx = list.findIndex((n) => n.id === targetId);
+          if (idx !== -1) {
+            const newList = [...list];
+            newList.splice(idx + 1, 0, draggedItem);
+            return newList;
+          }
+          return list;
         };
 
         const activeTopic = useMemo(
@@ -1369,6 +1438,19 @@
                               key={topic.id}
                               topic={topic}
                               activeId={activeTopicId}
+                              isDragged={draggedId === topic.id}
+                              isDragOver={dragOverId === topic.id}
+                              onDragStart={(id) => setDraggedId(id)}
+                              onDragOver={(id) => setDragOverId(id)}
+                              onDragLeave={() => setDragOverId(null)}
+                              onDrop={(targetId) => {
+                                if (draggedId && draggedId !== targetId) {
+                                  const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
+                                  setTopics(newTopics);
+                                }
+                                setDraggedId(null);
+                                setDragOverId(null);
+                              }}
                               onClick={() => {
                                 setActiveTopicId(topic.id);
                                 setEditMode(false);
@@ -1413,6 +1495,19 @@
                                 key={"prev-" + topic.id}
                                 topic={topic}
                                 activeId={activeTopicId}
+                                isDragged={draggedId === topic.id}
+                                isDragOver={dragOverId === topic.id}
+                                onDragStart={(id) => setDraggedId(id)}
+                                onDragOver={(id) => setDragOverId(id)}
+                                onDragLeave={() => setDragOverId(null)}
+                                onDrop={(targetId) => {
+                                  if (draggedId && draggedId !== targetId) {
+                                    const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
+                                    setTopics(newTopics);
+                                  }
+                                  setDraggedId(null);
+                                  setDragOverId(null);
+                                }}
                                 onClick={() => {
                                   setActiveTopicId(topic.id);
                                   setEditMode(false);
@@ -1449,6 +1544,19 @@
                                 key={topic.id}
                                 topic={topic}
                                 activeId={activeTopicId}
+                                isDragged={draggedId === topic.id}
+                                isDragOver={dragOverId === topic.id}
+                                onDragStart={(id) => setDraggedId(id)}
+                                onDragOver={(id) => setDragOverId(id)}
+                                onDragLeave={() => setDragOverId(null)}
+                                onDrop={(targetId) => {
+                                  if (draggedId && draggedId !== targetId) {
+                                    const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
+                                    setTopics(newTopics);
+                                  }
+                                  setDraggedId(null);
+                                  setDragOverId(null);
+                                }}
                                 onClick={() => {
                                   setActiveTopicId(topic.id);
                                   setEditMode(false);
@@ -1744,15 +1852,37 @@
         onClick,
         onDrillDown,
         onDelete,
+        isDragged,
+        isDragOver,
+        onDragStart,
+        onDragOver,
+        onDragLeave,
+        onDrop,
       }) => (
         <div
-          className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-pointer ${
+          className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-move ${
+            isDragOver ? "bg-t-accent/20 border-2 border-t-accent" : "border border-transparent"
+          } ${
+            isDragged ? "opacity-40" : ""
+          } ${
             topic.id === activeId
               ? "bg-t-accent text-t-accent-fg shadow-md"
               : "text-t-text hover:bg-t-surface hover:text-t-accent"
           }`}
           onClick={onClick}
           onDoubleClick={onDrillDown}
+          draggable
+          onDragStart={() => onDragStart(topic.id)}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            onDragOver(topic.id);
+          }}
+          onDragLeave={() => onDragLeave()}
+          onDrop={(e) => {
+            e.preventDefault();
+            onDrop(topic.id);
+          }}
         >
           <div className="flex items-center gap-3 overflow-hidden flex-1">
             <Icon name={topic.icon} size={16} />
