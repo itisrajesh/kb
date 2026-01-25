@@ -288,6 +288,42 @@
       .slide-out-to-right {
         animation: slideOutToRight 280ms ease-out forwards;
       }
+
+      /* Sidebar collapse/expand animation */
+      @keyframes sidebarCollapse {
+        from {
+          width: 320px;
+          opacity: 1;
+        }
+        to {
+          width: 0;
+          opacity: 0;
+        }
+      }
+
+      @keyframes sidebarExpand {
+        from {
+          width: 0;
+          opacity: 0;
+        }
+        to {
+          width: 320px;
+          opacity: 1;
+        }
+      }
+
+      .sidebar-collapse {
+        animation: sidebarCollapse 150ms ease-in-out forwards;
+      }
+
+      .sidebar-expand {
+        animation: sidebarExpand 150ms ease-in-out forwards;
+      }
+
+      /* Smooth width transition for desktop sidebar */
+      aside {
+        transition: width 150ms ease-in-out, opacity 150ms ease-in-out, border-color 150ms ease-in-out;
+      }
     </style>
   </head>
 
@@ -779,6 +815,7 @@
         const [isSafari, setIsSafari] = useState(false);
         const [draggedId, setDraggedId] = useState(null);
         const [dragOverId, setDragOverId] = useState(null);
+        const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
 
         useEffect(() => {
           // Detect Safari specifically
@@ -1358,6 +1395,16 @@
                     </span>
                   </div>
                   <button
+                    onClick={() => setDesktopSidebarCollapsed(!desktopSidebarCollapsed)}
+                    className="hidden md:flex p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                    title={desktopSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+                  >
+                    <Icon
+                      name={desktopSidebarCollapsed ? "panel-right-open" : "panel-right"}
+                      size={20}
+                    />
+                  </button>
+                  <button
                     onClick={() => setSettingsOpen(true)}
                     className="md:p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
                   >
@@ -1384,12 +1431,17 @@
               {/* SIDEBAR (Collapsible on Mobile, Sticky on Desktop) */}
               <aside
                 className={`
-                            fixed inset-y-0 left-0 z-[100] md:z-[19] w-72 bg-t-surface/95 backdrop-blur-xl border-r border-t-border transform transition-transform duration-300 ease-in-out
-                            md:translate-x-0 md:static md:w-80 md:h-[calc(100vh-4rem)] md:sticky md:top-16 md:bg-t-bg/50 md:backdrop-blur-sm
+                            fixed inset-y-0 left-0 z-[100] md:z-[19] bg-t-surface/95 backdrop-blur-xl border-r border-t-border transform
+                            md:translate-x-0 md:static md:h-[calc(100vh-4rem)] md:sticky md:top-16 md:bg-t-bg/50 md:backdrop-blur-sm
                             ${
                               sidebarOpen
-                                ? "translate-x-0"
-                                : "-translate-x-full"
+                                ? "translate-x-0 w-72"
+                                : "-translate-x-full w-72"
+                            }
+                            ${
+                              desktopSidebarCollapsed
+                                ? "md:w-0 md:border-r-0 md:overflow-hidden md:opacity-0"
+                                : "md:w-80 md:border-r md:opacity-100"
                             }
                         `}
               >
