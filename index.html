@@ -325,6 +325,15 @@
         transition: width 150ms ease-in-out, opacity 150ms ease-in-out, border-color 150ms ease-in-out;
       }
     </style>
+    <style>
+      .kb-search-highlight {
+        background: var(--accent, #2563EB);
+        color: var(--accent-fg, #fff);
+        border-radius: 3px;
+        padding: 0 2px;
+        font-weight: bold;
+      }
+    </style>
   </head>
 
   <body
@@ -1047,19 +1056,63 @@
           return current;
         }, [topics, viewPath]);
 
-        const flatten = (nodes) => {
+        // Flatten topics tree to array of topics with parent path
+        const flatten = (nodes, parentPath = []) => {
           let res = [];
           nodes.forEach((n) => {
-            res.push(n);
-            res = [...res, ...flatten(n.children)];
+            res.push({ ...n, parentPath });
+            res = [...res, ...flatten(n.children, [...parentPath, n.id])];
           });
           return res;
         };
+
+        // Global search: search both titles and all block contents
         const searchResults = useMemo(() => {
           if (!searchQuery) return [];
-          return flatten(topics).filter((t) =>
-            t.title.toLowerCase().includes(searchQuery.toLowerCase())
-          );
+          const query = searchQuery.toLowerCase();
+          const allTopics = flatten(topics);
+          // Find all matches in block content
+          let contentMatches = [];
+          let titleMatches = [];
+          allTopics.forEach((topic) => {
+            let foundInBlock = false;
+            let blockIdx = -1;
+            let blockMatchText = "";
+            if (topic.blocks && topic.blocks.length) {
+              for (let i = 0; i < topic.blocks.length; i++) {
+                const block = topic.blocks[i];
+                if (block.content && block.content.toLowerCase().includes(query)) {
+                  foundInBlock = true;
+                  blockIdx = i;
+                  // Find a snippet around the match
+                  const matchIdx = block.content.toLowerCase().indexOf(query);
+                  const snippetStart = Math.max(0, matchIdx - 30);
+                  const snippetEnd = Math.min(block.content.length, matchIdx + query.length + 30);
+                  blockMatchText = block.content.substring(snippetStart, snippetEnd);
+                  break;
+                }
+              }
+            }
+            if (foundInBlock) {
+              contentMatches.push({
+                ...topic,
+                matchType: "content",
+                matchBlockIdx: blockIdx,
+                matchSnippet: blockMatchText,
+              });
+            } else if (topic.title.toLowerCase().includes(query)) {
+              titleMatches.push({
+                ...topic,
+                matchType: "title",
+                matchBlockIdx: null,
+                matchSnippet: null,
+              });
+            }
+          });
+          // Content matches first, then title matches (excluding duplicates)
+          const contentIds = new Set(contentMatches.map((t) => t.id));
+          const filteredTitleMatches = titleMatches.filter((t) => !contentIds.has(t.id));
+          return [...contentMatches, ...filteredTitleMatches];
         }, [topics, searchQuery]);
 
         // Persist active topic to query param and validate it against current topics
@@ -1482,45 +1535,101 @@
                     <div className="sidebar-list-wrapper h-full">
                       {!animatingSidebar && (
                         <div className="relative h-full">
-                          {(searchQuery
-                            ? searchResults
-                            : currentSidebarList
-                          ).map((topic) => (
-                            <SidebarItem
-                              key={topic.id}
-                              topic={topic}
-                              activeId={activeTopicId}
-                              isDragged={draggedId === topic.id}
-                              isDragOver={dragOverId === topic.id}
-                              onDragStart={(id) => setDraggedId(id)}
-                              onDragOver={(id) => setDragOverId(id)}
-                              onDragLeave={() => setDragOverId(null)}
-                              onDrop={(targetId) => {
-                                if (draggedId && draggedId !== targetId) {
-                                  const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
-                                  setTopics(newTopics);
-                                }
-                                setDraggedId(null);
-                                setDragOverId(null);
-                              }}
-                              onClick={() => {
-                                setActiveTopicId(topic.id);
-                                setEditMode(false);
-                                if (window.innerWidth < 768)
-                                  setSidebarOpen(false);
-                              }}
-                              onDrillDown={() => handleDrillDown(topic.id)}
-                              onDelete={() => {
-                                if (
-                                  confirm("Delete this topic and subtopics?")
-                                ) {
-                                  setTopics(deleteFromTree(topics, topic.id));
-                                  if (activeTopicId === topic.id)
-                                    setActiveTopicId(null);
-                                }
-                              }}
-                            />
-                          ))}
+                          {searchQuery ? (
+                            <div className="space-y-1">
+                              {searchResults.length === 0 && (
+                                <div className="text-t-muted text-sm px-2 py-4">No results found.</div>
+                              )}
+                              {searchResults.map((result) => (
+                                <button
+                                  key={result.id + (result.matchBlockIdx !== undefined ? "-" + result.matchBlockIdx : "")}
+                                  className={`w-full text-left group flex items-center gap-2 p-2 rounded-lg transition-all
+                                    ${result.id === activeTopicId ? "bg-t-accent text-t-accent-fg shadow-md" : "text-t-text hover:bg-t-surface hover:text-t-accent"}
+                                  `}
+                                  onClick={() => {
+                                    setActiveTopicId(result.id);
+                                    setSidebarOpen(false);
+                                    setViewPath(result.parentPath || []);
+                                    setEditMode(false);
+                                    setTimeout(() => {
+                                      // Scroll to the first matching word in the content
+                                      if (result.matchType === "content" && result.matchBlockIdx !== null) {
+                                        setTimeout(() => {
+                                          const blockEls = document.querySelectorAll(".kb-block");
+                                          const blockEl = blockEls[result.matchBlockIdx];
+                                          if (blockEl) {
+                                            const inner = blockEl.innerHTML;
+                                            const query = searchQuery;
+                                            const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i");
+                                            const newInner = inner.replace(regex, (m) => `<span class='kb-search-highlight'>${m}</span>`);
+                                            blockEl.innerHTML = newInner;
+                                            const highlight = blockEl.querySelector('.kb-search-highlight');
+                                            if (highlight) {
+                                              highlight.scrollIntoView({ behavior: "smooth", block: "center" });
+                                            } else {
+                                              blockEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                            }
+                                          }
+                                        }, 200);
+                                      }
+                                    }, 100);
+                                  }}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Icon name={result.icon} size={16} />
+                                    <span className="truncate text-sm font-medium select-none">
+                                      {result.title}
+                                    </span>
+                                  </span>
+                                  {result.matchType === "content" && result.matchSnippet && (
+                                    <span className="block text-xs text-t-muted mt-0.5 px-1 truncate">
+                                      ...{result.matchSnippet}...
+                                    </span>
+                                  )}
+                                  {result.matchType === "title" && (
+                                    <span className="block text-xs text-t-muted mt-0.5 px-1">(in title)</span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            currentSidebarList.map((topic) => (
+                              <SidebarItem
+                                key={topic.id}
+                                topic={topic}
+                                activeId={activeTopicId}
+                                isDragged={draggedId === topic.id}
+                                isDragOver={dragOverId === topic.id}
+                                onDragStart={(id) => setDraggedId(id)}
+                                onDragOver={(id) => setDragOverId(id)}
+                                onDragLeave={() => setDragOverId(null)}
+                                onDrop={(targetId) => {
+                                  if (draggedId && draggedId !== targetId) {
+                                    const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
+                                    setTopics(newTopics);
+                                  }
+                                  setDraggedId(null);
+                                  setDragOverId(null);
+                                }}
+                                onClick={() => {
+                                  setActiveTopicId(topic.id);
+                                  setEditMode(false);
+                                  if (window.innerWidth < 768)
+                                    setSidebarOpen(false);
+                                }}
+                                onDrillDown={() => handleDrillDown(topic.id)}
+                                onDelete={() => {
+                                  if (
+                                    confirm("Delete this topic and subtopics?")
+                                  ) {
+                                    setTopics(deleteFromTree(topics, topic.id));
+                                    if (activeTopicId === topic.id)
+                                      setActiveTopicId(null);
+                                  }
+                                }}
+                              />
+                            ))
+                          )}
                           {currentSidebarList.length === 0 && !searchQuery && (
                             <div className="text-center py-10 text-t-muted text-sm italic">
                               Empty Folder
@@ -1774,7 +1883,7 @@
                         ? tempTopicData.blocks
                         : activeTopic.blocks
                       ).map((block, idx) => (
-                        <div key={block.id} className="group relative">
+                        <div key={block.id} className={editMode ? "group relative" : "kb-block group relative"} style={editMode ? {} : { scrollMarginTop: 120 }}>
                           {editMode ? (
                             <div className="bg-t-surface p-4 rounded-xl border border-t-border shadow-sm">
                               <div className="flex justify-end gap-2 mb-2 opacity-50 group-hover:opacity-100 transition">
