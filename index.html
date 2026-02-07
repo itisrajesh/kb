@@ -1066,54 +1066,76 @@
           return res;
         };
 
-        // Global search: search both titles and all block contents
+        // Global search: search both titles and all block contents (all matches, debounced, optimized highlight)
+        const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+        useEffect(() => {
+          const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+          }, 400); // 400ms debounce for better performance
+          return () => clearTimeout(handler);
+        }, [searchQuery]);
+
         const searchResults = useMemo(() => {
-          if (!searchQuery) return [];
-          const query = searchQuery.toLowerCase();
-          const allTopics = flatten(topics);
-          // Find all matches in block content
-          let contentMatches = [];
-          let titleMatches = [];
-          allTopics.forEach((topic) => {
-            let foundInBlock = false;
-            let blockIdx = -1;
-            let blockMatchText = "";
-            if (topic.blocks && topic.blocks.length) {
-              for (let i = 0; i < topic.blocks.length; i++) {
-                const block = topic.blocks[i];
-                if (block.content && block.content.toLowerCase().includes(query)) {
-                  foundInBlock = true;
-                  blockIdx = i;
-                  // Find a snippet around the match
-                  const matchIdx = block.content.toLowerCase().indexOf(query);
-                  const snippetStart = Math.max(0, matchIdx - 30);
-                  const snippetEnd = Math.min(block.content.length, matchIdx + query.length + 30);
-                  blockMatchText = block.content.substring(snippetStart, snippetEnd);
-                  break;
+          if (!debouncedSearchQuery) return [];
+          const query = debouncedSearchQuery.toLowerCase();
+          const results = [];
+
+          // Recursive search function
+          function searchTopics(nodes) {
+            for (let topic of nodes) {
+              // Title match (only add once per topic)
+              const titleLower = topic.title.toLowerCase();
+              if (titleLower.includes(query)) {
+                let highlightedTitle = topic.title.replace(new RegExp(`(${debouncedSearchQuery})`, "gi"), '<span class="kb-search-highlight">$1</span>');
+                results.push({
+                  ...topic,
+                  matchType: "title",
+                  matchBlockIdx: null,
+                  matchSnippet: highlightedTitle,
+                  matchId: `${topic.id}-title`,
+                });
+              }
+              // Content match (only add first unique match per block)
+              if (topic.blocks && topic.blocks.length) {
+                for (let blockIdx = 0; blockIdx < topic.blocks.length; blockIdx++) {
+                  const block = topic.blocks[blockIdx];
+                  const content = block.content || "";
+                  const lowerContent = content.toLowerCase();
+                  const matchIdx = lowerContent.indexOf(query);
+                  if (matchIdx !== -1) {
+                    const snippetStart = Math.max(0, matchIdx - 30);
+                    const snippetEnd = Math.min(content.length, matchIdx + query.length + 30);
+                    const blockMatchText = content.substring(snippetStart, snippetEnd);
+                    let highlightedSnippet = blockMatchText.replace(new RegExp(`(${debouncedSearchQuery})`, "gi"), '<span class="kb-search-highlight">$1</span>');
+                    results.push({
+                      ...topic,
+                      matchType: "content",
+                      matchBlockIdx: blockIdx,
+                      matchSnippet: highlightedSnippet,
+                      matchOffset: matchIdx,
+                      matchId: `${topic.id}-block${blockIdx}-match${matchIdx}`,
+                    });
+                  }
                 }
               }
+              // Recurse into children only if they exist
+              if (topic.children && topic.children.length > 0) {
+                searchTopics(topic.children);
+              }
             }
-            if (foundInBlock) {
-              contentMatches.push({
-                ...topic,
-                matchType: "content",
-                matchBlockIdx: blockIdx,
-                matchSnippet: blockMatchText,
-              });
-            } else if (topic.title.toLowerCase().includes(query)) {
-              titleMatches.push({
-                ...topic,
-                matchType: "title",
-                matchBlockIdx: null,
-                matchSnippet: null,
-              });
+          }
+          searchTopics(topics);
+          // Remove duplicate topic matches (prefer content over title)
+          const seenIds = new Set();
+          const deduped = [];
+          for (const r of results) {
+            if (!seenIds.has(r.matchId)) {
+              deduped.push(r);
+              seenIds.add(r.matchId);
             }
-          });
-          // Content matches first, then title matches (excluding duplicates)
-          const contentIds = new Set(contentMatches.map((t) => t.id));
-          const filteredTitleMatches = titleMatches.filter((t) => !contentIds.has(t.id));
-          return [...contentMatches, ...filteredTitleMatches];
-        }, [topics, searchQuery]);
+          }
+          return deduped;
+        }, [topics, debouncedSearchQuery]);
 
         // Persist active topic to query param and validate it against current topics
         useEffect(() => {
@@ -1542,7 +1564,7 @@
                               )}
                               {searchResults.map((result) => (
                                 <button
-                                  key={result.id + (result.matchBlockIdx !== undefined ? "-" + result.matchBlockIdx : "")}
+                                  key={result.matchId || (result.id + (result.matchBlockIdx !== undefined ? "-" + result.matchBlockIdx : ""))}
                                   className={`w-full text-left group flex items-center gap-2 p-2 rounded-lg transition-all
                                     ${result.id === activeTopicId ? "bg-t-accent text-t-accent-fg shadow-md" : "text-t-text hover:bg-t-surface hover:text-t-accent"}
                                   `}
