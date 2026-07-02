@@ -22,9 +22,28 @@ self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] Caching precache URLs');
-        return cache.addAll(PRECACHE_URLS);
+      .then(async (cache) => {
+        console.log('[SW] Caching precache URLs individually (non-atomic)');
+        const results = await Promise.allSettled(
+          PRECACHE_URLS.map((url) =>
+            // 'reload' bypasses the HTTP cache so we get a fresh copy to store
+            fetch(url, { cache: 'reload' }).then((response) => {
+              if (!response.ok && response.type !== 'opaque') {
+                throw new Error(`Bad response ${response.status} for ${url}`);
+              }
+              return cache.put(url, response);
+            })
+          )
+        );
+
+        results.forEach((result, i) => {
+          if (result.status === 'rejected') {
+            console.warn('[SW] Failed to precache:', PRECACHE_URLS[i], result.reason);
+          }
+        });
+
+        const failed = results.filter((r) => r.status === 'rejected').length;
+        console.log(`[SW] Precache complete: ${PRECACHE_URLS.length - failed}/${PRECACHE_URLS.length} succeeded`);
       })
       .then(() => {
         console.log('[SW] Skipping waiting');
