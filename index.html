@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -29,11 +29,8 @@
     ></script>
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link
       href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css"
@@ -44,7 +41,6 @@
     <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 
-    <!-- Register service worker early for better PWA support on Android -->
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker
@@ -143,10 +139,11 @@
       button,
       input,
       textarea {
-        transition: background-color 0.3s ease, border-color 0.3s ease,
+        transition:
+          background-color 0.3s ease,
+          border-color 0.3s ease,
           color 0.3s ease;
       }
-
       /* Glassmorphism */
       .glass {
         backdrop-filter: blur(12px);
@@ -154,9 +151,7 @@
         background: var(--surface-glass);
         border-bottom: 1px solid var(--border);
       }
-
       /* Scrollbar */
-      /* WebKit scrollbar styling (Chrome, Edge, Safari) */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -171,33 +166,24 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--muted);
       }
-
-      /* Firefox scrollbar styling */
       html {
         scrollbar-width: thin;
         scrollbar-color: var(--border) transparent;
       }
-
-      /* Prism Overrides */
       pre[class*="language-"] {
         background: var(--surface) !important;
         text-shadow: none !important;
         margin: 0 !important;
         padding: 1rem !important;
       }
-
-      /* Mermaid Diagram Styles */
       .mermaid {
         display: flex;
         justify-content: center;
         margin: 1rem 0;
       }
-
       svg[id^="mermaid"] {
         border-radius: 8px;
       }
-
-      /* Base Variables */
       :root {
         --bg: #ffffff;
         --surface: #f3f4f6;
@@ -208,10 +194,6 @@
         --accent: #3b82f6;
         --accent-fg: #ffffff;
       }
-      /* Blob rendering improvements to reduce pixelation on some displays
-         - promote blobs to their own compositing layer
-         - hint the browser about changing properties for smoother animation
-      */
       .animate-blob {
         will-change: transform;
         transform: translate3d(0, 0, 0);
@@ -221,7 +203,6 @@
         -webkit-perspective: 1000;
         image-rendering: -webkit-optimize-contrast;
       }
-      /* Sidebar slide animations */
       .sidebar-list-wrapper {
         position: relative;
         height: 100%;
@@ -231,7 +212,6 @@
         inset: 0;
         will-change: transform, opacity;
       }
-
       @keyframes slideInFromRight {
         from {
           transform: translateX(100%);
@@ -242,7 +222,6 @@
           opacity: 1;
         }
       }
-
       @keyframes slideOutToLeft {
         from {
           transform: translateX(0%);
@@ -253,7 +232,6 @@
           opacity: 0;
         }
       }
-
       @keyframes slideInFromLeft {
         from {
           transform: translateX(-100%);
@@ -264,7 +242,6 @@
           opacity: 1;
         }
       }
-
       @keyframes slideOutToRight {
         from {
           transform: translateX(0%);
@@ -275,7 +252,6 @@
           opacity: 0;
         }
       }
-
       .slide-in-from-right {
         animation: slideInFromRight 280ms ease-out forwards;
       }
@@ -288,46 +264,14 @@
       .slide-out-to-right {
         animation: slideOutToRight 280ms ease-out forwards;
       }
-
-      /* Sidebar collapse/expand animation */
-      @keyframes sidebarCollapse {
-        from {
-          width: 320px;
-          opacity: 1;
-        }
-        to {
-          width: 0;
-          opacity: 0;
-        }
-      }
-
-      @keyframes sidebarExpand {
-        from {
-          width: 0;
-          opacity: 0;
-        }
-        to {
-          width: 320px;
-          opacity: 1;
-        }
-      }
-
-      .sidebar-collapse {
-        animation: sidebarCollapse 150ms ease-in-out forwards;
-      }
-
-      .sidebar-expand {
-        animation: sidebarExpand 150ms ease-in-out forwards;
-      }
-
-      /* Smooth width transition for desktop sidebar */
       aside {
-        transition: width 150ms ease-in-out, opacity 150ms ease-in-out, border-color 150ms ease-in-out;
+        transition:
+          width 150ms ease-in-out,
+          opacity 150ms ease-in-out,
+          border-color 150ms ease-in-out;
       }
-    </style>
-    <style>
       .kb-search-highlight {
-        background: var(--accent, #2563EB);
+        background: var(--accent, #2563eb);
         color: var(--accent-fg, #fff);
         border-radius: 3px;
         padding: 0 2px;
@@ -342,10 +286,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      // Initialize mermaid
       mermaid.initialize({ startOnLoad: false, theme: "default" });
 
-      // Configure marked to handle mermaid code blocks
       const renderer = new marked.Renderer();
       const originalCode = renderer.code.bind(renderer);
       renderer.code = function ({ text, lang, escaped }) {
@@ -357,6 +299,7 @@
       marked.setOptions({ renderer });
 
       const { useState, useEffect, useRef, useMemo } = React;
+
       const THEMES = {
         paper: {
           label: "Paper",
@@ -548,6 +491,7 @@
           },
         },
       };
+
       const FONT_SIZES = {
         xs: "prose-xs",
         small: "prose-sm",
@@ -556,18 +500,14 @@
         xl: "prose-xl",
       };
 
-      // --- UTILS ---
       const generateId = () => Math.random().toString(36).substr(2, 9);
       const toPascalCase = (str) => {
         if (!str) return "Circle";
         return str.replace(/(^\w|-\w)/g, (clear) =>
-          clear.replace(/-/, "").toUpperCase()
+          clear.replace(/-/, "").toUpperCase(),
         );
       };
 
-      // --- COMPONENTS ---
-
-      // 1. Icon Component (Safe SVG Injection)
       const Icon = ({ name, size = 16, className = "" }) => {
         const pascalName = toPascalCase(name);
         const iconData = lucide.icons[pascalName] || lucide.icons.Circle;
@@ -577,7 +517,7 @@
                 (child) =>
                   `<${child[0]} ${Object.entries(child[1])
                     .map(([k, v]) => `${k}="${v}"`)
-                    .join(" ")} />`
+                    .join(" ")} />`,
               )
               .join("")}</svg>`
           : "";
@@ -589,13 +529,11 @@
         );
       };
 
-      // 2. Markdown Viewer
       const MarkdownViewer = ({ content, fontSizeClass }) => {
         const ref = useRef(null);
         useEffect(() => {
           if (ref.current) {
             Prism.highlightAllUnder(ref.current);
-            // Render mermaid diagrams
             setTimeout(() => {
               mermaid
                 .run()
@@ -612,7 +550,92 @@
         );
       };
 
-      // 3. Settings Modal
+      const GraphView = ({ topics, activeTopicId, onNodeClick }) => {
+        const containerRef = useRef(null);
+
+        useEffect(() => {
+          if (!containerRef.current) return;
+
+          window.handleGraphNodeClick = (id) => {
+            onNodeClick(id);
+          };
+
+          let markup = "flowchart LR\n";
+
+          const buildGraph = (nodes, parentId = null) => {
+            nodes.forEach((node) => {
+              const safeTitle = node.title.replace(/["\\[\]()]/g, "");
+              markup += `  ${node.id}["${safeTitle}"]\n`;
+              markup += `  click ${node.id} "javascript:window.handleGraphNodeClick('${node.id}')"\n`;
+
+              if (node.id === activeTopicId) {
+                markup += `  style ${node.id} stroke:#3b82f6,stroke-width:4px\n`;
+              }
+
+              if (parentId) {
+                markup += `  ${parentId} --> ${node.id}\n`;
+              }
+
+              if (node.children && node.children.length > 0) {
+                buildGraph(node.children, node.id);
+              }
+            });
+          };
+
+          buildGraph(topics);
+
+          try {
+            containerRef.current.innerHTML = "";
+            mermaid
+              .render("mermaid-graph-view", markup)
+              .then((result) => {
+                if (containerRef.current) {
+                  containerRef.current.innerHTML = result.svg;
+                }
+              })
+              .catch((e) => {
+                containerRef.current.innerHTML = `<div class="p-4 text-red-500 bg-red-100/10 rounded-lg">Graph Render Error: ${e.message}</div>`;
+              });
+          } catch (err) {
+            console.error("Mermaid render error:", err);
+          }
+
+          return () => {
+            delete window.handleGraphNodeClick;
+          };
+        }, [topics, activeTopicId, onNodeClick]);
+
+        // Using scoped styles instead of classDef var() solves the syntax error entirely.
+        return (
+          <div className="w-full h-[600px] overflow-auto bg-t-surface/50 border border-t-border rounded-xl p-8 relative mermaid-container animate-fade-in shadow-inner">
+            <style>{`
+                    .mermaid-container .node rect, .mermaid-container .node circle, .mermaid-container .node polygon { 
+                        fill: var(--surface) !important; 
+                        stroke: var(--border) !important; 
+                    }
+                    .mermaid-container .node text { 
+                        fill: var(--text) !important; 
+                    }
+                    .mermaid-container .edgePath path { 
+                        stroke: var(--muted) !important; 
+                    }
+                    .mermaid-container .edgeLabel {
+                        background-color: var(--bg) !important;
+                        color: var(--text) !important;
+                    }
+                    .mermaid-container .node:hover rect {
+                        fill: var(--border) !important;
+                        cursor: pointer;
+                    }
+                `}</style>
+            <div
+              ref={containerRef}
+              className="flex justify-center min-w-max"
+            ></div>
+          </div>
+        );
+      };
+
       const SettingsModal = ({
         isOpen,
         onClose,
@@ -639,7 +662,6 @@
                 <button
                   className="text-xl font-bold flex items-center gap-2 md:cursor-default"
                   onDoubleClick={(e) => {
-                    // full screen mode toggle
                     e.preventDefault();
                     if (!document.fullscreenElement) {
                       document.documentElement.requestFullscreen();
@@ -650,7 +672,6 @@
                 >
                   <Icon name="settings" size={20} /> Settings
                 </button>
-
                 <button
                   onClick={onClose}
                   className="text-t-muted hover:text-t-text hover:bg-t-border p-2 rounded-full transition"
@@ -658,7 +679,6 @@
                   <Icon name="x" size={20} />
                 </button>
               </div>
-              {/* Theme Section */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-t-muted mb-2">
                   Theme
@@ -668,12 +688,7 @@
                     <button
                       key={key}
                       onClick={() => onSetTheme(key)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2
-                                            ${
-                                              currentTheme === key
-                                                ? "bg-t-accent text-t-accent-fg ring-2 ring-offset-2 ring-t-accent"
-                                                : "bg-t-bg text-t-text hover:bg-t-border border border-transparent"
-                                            }`}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${currentTheme === key ? "bg-t-accent text-t-accent-fg ring-2 ring-offset-2 ring-t-accent" : "bg-t-bg text-t-text hover:bg-t-border border border-transparent"}`}
                     >
                       <div
                         className="w-3 h-3 rounded-full"
@@ -684,27 +699,19 @@
                   ))}
                 </div>
               </div>
-
-              {/* Blob Animation Toggle Button */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-t-muted mb-2">
                   Blob Animation
                 </label>
                 <button
                   onClick={() => onSetBlobAnimation(!blobAnimationEnabled)}
-                  className={`w-full py-2 px-4 text-sm rounded-lg border transition mb-6 ${
-                    blobAnimationEnabled
-                      ? "bg-t-accent text-t-accent-fg ring-2 ring-offset-2 ring-t-accent"
-                      : "bg-t-bg text-t-text hover:bg-t-border border border-transparent"
-                  }`}
+                  className={`w-full py-2 px-4 text-sm rounded-lg border transition mb-6 ${blobAnimationEnabled ? "bg-t-accent text-t-accent-fg ring-2 ring-offset-2 ring-t-accent" : "bg-t-bg text-t-text hover:bg-t-border border border-transparent"}`}
                 >
                   {blobAnimationEnabled
                     ? "Disable Blob Animation"
                     : "Enable Blob Animation"}
                 </button>
               </div>
-
-              {/* Font Size Section */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-t-muted mb-2">
                   Readability (Font Size)
@@ -714,19 +721,13 @@
                     <button
                       key={size}
                       onClick={() => onSetFontSize(size)}
-                      className={`flex-1 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
-                        fontSize === size
-                          ? "bg-t-accent text-t-accent-fg shadow-sm"
-                          : "text-t-muted hover:text-t-text"
-                      }`}
+                      className={`flex-1 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${fontSize === size ? "bg-t-accent text-t-accent-fg shadow-sm" : "text-t-muted hover:text-t-text"}`}
                     >
                       {size}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Data Section */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-t-muted">
                   Data Management
@@ -754,9 +755,7 @@
         );
       };
 
-      // --- MAIN APPLICATION ---
       const App = () => {
-        // State
         const [topics, setTopics] = useState(() => {
           const saved = localStorage.getItem("kb_data");
           return saved
@@ -779,19 +778,20 @@
               ];
         });
         const [viewPath, setViewPath] = useState([]);
-        const params = new URLSearchParams(window.location.search);
-        const initialTopicFromURL = params.get("topic");
         const [activeTopicId, setActiveTopicId] = useState(() => {
-          // Priority: URL > localStorage (last active) > default
-          if (initialTopicFromURL) return initialTopicFromURL;
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("topic")) return params.get("topic");
           try {
-            const lastActive = localStorage.getItem("kb_lastActiveTopic");
-            return lastActive || "intro";
+            return localStorage.getItem("kb_lastActiveTopic") || "intro";
           } catch (e) {
             return "intro";
           }
         });
+
         const [editMode, setEditMode] = useState(false);
+        const [viewMode, setViewMode] = useState("content"); // "content" | "graph"
+        const [distractionFree, setDistractionFree] = useState(false);
+
         const loadSetting = (key, fallback) => {
           try {
             const v = localStorage.getItem(key);
@@ -800,78 +800,123 @@
             return fallback;
           }
         };
-
         const [themeKey, setThemeKey] = useState(() =>
-          loadSetting("kb_theme", "paper")
+          loadSetting("kb_theme", "paper"),
         );
         const [fontSize, setFontSize] = useState(() =>
-          loadSetting("kb_fontSize", "medium")
+          loadSetting("kb_fontSize", "medium"),
         );
         const [searchQuery, setSearchQuery] = useState("");
+        const searchInputRef = useRef(null);
+
         const [blobAnimationEnabled, setBlobAnimationEnabled] = useState(() =>
           loadSetting(
             "kb_blobAnimation",
-            THEMES[loadSetting("kb_theme", "paper")].hasBlobs
-          )
+            THEMES[loadSetting("kb_theme", "paper")].hasBlobs,
+          ),
         );
+
         const [timerSeconds, setTimerSeconds] = useState(0);
         const timerRef = useRef(null);
         const [tempTopicData, setTempTopicData] = useState(null);
         const [settingsOpen, setSettingsOpen] = useState(false);
         const [scrollProgress, setScrollProgress] = useState(0);
-        const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar state
+
+        const [sidebarOpen, setSidebarOpen] = useState(false);
         const [animatingSidebar, setAnimatingSidebar] = useState(false);
         const [prevSidebarList, setPrevSidebarList] = useState([]);
         const [navDirection, setNavDirection] = useState("forward");
         const [isSafari, setIsSafari] = useState(false);
         const [draggedId, setDraggedId] = useState(null);
         const [dragOverId, setDragOverId] = useState(null);
-        const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
+        const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] =
+          useState(false);
+
+        // Modal State for custom alerts/confirms
+        const [dialogConfig, setDialogConfig] = useState(null);
 
         useEffect(() => {
-          // Detect Safari specifically
           const ua = navigator.userAgent.toLowerCase();
-          const isSafariCheck =
-            ua.indexOf("safari") > -1 && ua.indexOf("chrome") < 0;
-          setIsSafari(isSafariCheck);
+          setIsSafari(ua.indexOf("safari") > -1 && ua.indexOf("chrome") < 0);
         }, []);
 
-        // --- EFFECTS ---
         useEffect(
           () => localStorage.setItem("kb_data", JSON.stringify(topics)),
-          [topics]
+          [topics],
         );
-
-        // Persist UI preferences: theme, font size, blob animation
         useEffect(() => {
           try {
             localStorage.setItem("kb_theme", JSON.stringify(themeKey));
           } catch (e) {}
         }, [themeKey]);
-
         useEffect(() => {
           try {
             localStorage.setItem("kb_fontSize", JSON.stringify(fontSize));
           } catch (e) {}
         }, [fontSize]);
-
-        // Persist the last active topic ID
         useEffect(() => {
           try {
             localStorage.setItem("kb_lastActiveTopic", activeTopicId);
           } catch (e) {}
         }, [activeTopicId]);
-
         useEffect(() => {
           try {
             localStorage.setItem(
               "kb_blobAnimation",
-              JSON.stringify(blobAnimationEnabled)
+              JSON.stringify(blobAnimationEnabled),
             );
           } catch (e) {}
         }, [blobAnimationEnabled]);
 
-        // Theme Application
+        useEffect(() => {
+          const handleKeyDown = (e) => {
+            // Focus Search
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+              e.preventDefault();
+              if (searchInputRef.current) searchInputRef.current.focus();
+            }
+            // Toggle Distraction Free
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+              e.preventDefault();
+              setDistractionFree((prev) => !prev);
+            }
+          };
+          window.addEventListener("keydown", handleKeyDown);
+          return () => window.removeEventListener("keydown", handleKeyDown);
+        }, []);
+
+        useEffect(() => {
+          const handleKeyDownContext = (e) => {
+            // Enter Edit Mode
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
+              e.preventDefault();
+              if (activeTopicId && !editMode && activeTopic) {
+                setTempTopicData(activeTopic);
+                setEditMode(true);
+                setViewMode("content");
+              }
+            }
+            // Save Edit
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+              if (editMode) {
+                e.preventDefault();
+                setTopics(
+                  updateTree(topics, activeTopic.id, () => tempTopicData),
+                );
+                setEditMode(false);
+              }
+            }
+            // New Topic
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
+              e.preventDefault();
+              handleCreateTopic();
+            }
+          };
+          window.addEventListener("keydown", handleKeyDownContext);
+          return () =>
+            window.removeEventListener("keydown", handleKeyDownContext);
+        }, [activeTopicId, editMode, tempTopicData, topics, viewPath]);
+
         useEffect(() => {
           const theme = THEMES[themeKey];
           const root = document.documentElement;
@@ -879,27 +924,29 @@
             if (key !== "--prism") root.style.setProperty(key, val);
           });
           document.getElementById("prism-theme").href = theme.colors["--prism"];
-          // Update mermaid theme based on selected theme
           const mermaidTheme =
-            themeKey === "night" || themeKey === "cyberpunk"
+            themeKey === "night" ||
+            themeKey === "cyberpunk" ||
+            themeKey === "dracula" ||
+            themeKey === "matrix" ||
+            themeKey === "terminal" ||
+            themeKey === "ember"
               ? "dark"
               : "default";
           mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
-          // Update meta theme-color so browsers' UI matches the app accent
           try {
             const themeMeta = document.querySelector(
-              'meta[name="theme-color"]'
+              'meta[name="theme-color"]',
             );
-            if (themeMeta && theme.colors && theme.colors["--surface-glass"]) {
+            if (themeMeta && theme.colors["--surface-glass"]) {
               themeMeta.setAttribute(
                 "content",
-                theme.colors["--surface-glass"]
+                theme.colors["--surface-glass"],
               );
             }
           } catch (e) {}
         }, [themeKey]);
 
-        // Scroll Tracking & Memory
         useEffect(() => {
           const handleScroll = () => {
             const totalScroll = document.documentElement.scrollTop;
@@ -908,20 +955,18 @@
               document.documentElement.clientHeight;
             const scroll = windowHeight > 0 ? totalScroll / windowHeight : 0;
             setScrollProgress(scroll);
-            // Save scroll position to localStorage
             localStorage.setItem(
               `kb_scroll_${activeTopicId}`,
-              JSON.stringify(totalScroll)
+              JSON.stringify(totalScroll),
             );
           };
           window.addEventListener("scroll", handleScroll);
           return () => window.removeEventListener("scroll", handleScroll);
         }, [activeTopicId]);
 
-        // Restore scroll position when topic changes
         useEffect(() => {
           const savedScroll = localStorage.getItem(
-            `kb_scroll_${activeTopicId}`
+            `kb_scroll_${activeTopicId}`,
           );
           if (savedScroll !== null) {
             const scrollPos = JSON.parse(savedScroll);
@@ -939,13 +984,11 @@
             timerRef.current = null;
           }
           setTimerSeconds(0);
-
           if (activeTopicId) {
             timerRef.current = setInterval(() => {
               setTimerSeconds((prev) => prev + 1);
             }, 1000);
           }
-
           return () => {
             if (timerRef.current) {
               clearInterval(timerRef.current);
@@ -978,7 +1021,6 @@
           }
         };
 
-        // --- HELPERS ---
         const findNode = (nodes, id) => {
           for (let node of nodes) {
             if (node.id === id) return node;
@@ -1009,7 +1051,6 @@
         };
 
         const moveItemInTree = (nodes, draggedId, targetId, currentPath) => {
-          // Find and remove the dragged item from its current location
           let draggedItem = null;
           const removeFromTree = (nodeList) => {
             return nodeList.filter((n) => {
@@ -1021,25 +1062,9 @@
               return true;
             });
           };
-
           let result = removeFromTree(nodes);
-
           if (!draggedItem) return nodes;
 
-          // Find the target parent and insert after target
-          const insertIntoTree = (nodeList, path = []) => {
-            return nodeList.map((n) => {
-              if (n.id === targetId) {
-                // Insert into the same parent as target, after target
-                const parentPath = path;
-                return insertAfterTarget(nodeList, draggedItem, targetId);
-              }
-              n.children = insertIntoTree(n.children, [...path, n.id]);
-              return n;
-            });
-          };
-
-          // Helper to insert after target in a list
           const insertAfterInList = (list, draggedItem, targetId) => {
             const idx = list.findIndex((n) => n.id === targetId);
             if (idx !== -1) {
@@ -1050,34 +1075,24 @@
             return list;
           };
 
-          // Find where to insert based on current path
           if (currentPath.length === 0) {
-            // Top level
             result = insertAfterInList(result, draggedItem, targetId);
           } else {
-            // Nested level
-            result = updateTree(result, currentPath[currentPath.length - 1], (n) => ({
-              ...n,
-              children: insertAfterInList(n.children, draggedItem, targetId),
-            }));
+            result = updateTree(
+              result,
+              currentPath[currentPath.length - 1],
+              (n) => ({
+                ...n,
+                children: insertAfterInList(n.children, draggedItem, targetId),
+              }),
+            );
           }
-
           return result;
-        };
-
-        const insertAfterTarget = (list, draggedItem, targetId) => {
-          const idx = list.findIndex((n) => n.id === targetId);
-          if (idx !== -1) {
-            const newList = [...list];
-            newList.splice(idx + 1, 0, draggedItem);
-            return newList;
-          }
-          return list;
         };
 
         const activeTopic = useMemo(
           () => findNode(topics, activeTopicId),
-          [topics, activeTopicId]
+          [topics, activeTopicId],
         );
 
         const topParentName = useMemo(() => {
@@ -1103,22 +1118,11 @@
           return current;
         }, [topics, viewPath]);
 
-        // Flatten topics tree to array of topics with parent path
-        const flatten = (nodes, parentPath = []) => {
-          let res = [];
-          nodes.forEach((n) => {
-            res.push({ ...n, parentPath });
-            res = [...res, ...flatten(n.children, [...parentPath, n.id])];
-          });
-          return res;
-        };
-
-        // Global search: search both titles and all block contents (all matches, debounced, optimized highlight)
         const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
         useEffect(() => {
           const handler = setTimeout(() => {
             setDebouncedSearchQuery(searchQuery);
-          }, 400); // 400ms debounce for better performance
+          }, 400);
           return () => clearTimeout(handler);
         }, [searchQuery]);
 
@@ -1126,14 +1130,14 @@
           if (!debouncedSearchQuery) return [];
           const query = debouncedSearchQuery.toLowerCase();
           const results = [];
-
-          // Recursive search function
           function searchTopics(nodes) {
             for (let topic of nodes) {
-              // Title match (only add once per topic)
               const titleLower = topic.title.toLowerCase();
               if (titleLower.includes(query)) {
-                let highlightedTitle = topic.title.replace(new RegExp(`(${debouncedSearchQuery})`, "gi"), '<span class="kb-search-highlight">$1</span>');
+                let highlightedTitle = topic.title.replace(
+                  new RegExp(`(${debouncedSearchQuery})`, "gi"),
+                  '<span class="kb-search-highlight">$1</span>',
+                );
                 results.push({
                   ...topic,
                   matchType: "title",
@@ -1142,18 +1146,30 @@
                   matchId: `${topic.id}-title`,
                 });
               }
-              // Content match (only add first unique match per block)
               if (topic.blocks && topic.blocks.length) {
-                for (let blockIdx = 0; blockIdx < topic.blocks.length; blockIdx++) {
+                for (
+                  let blockIdx = 0;
+                  blockIdx < topic.blocks.length;
+                  blockIdx++
+                ) {
                   const block = topic.blocks[blockIdx];
                   const content = block.content || "";
                   const lowerContent = content.toLowerCase();
                   const matchIdx = lowerContent.indexOf(query);
                   if (matchIdx !== -1) {
                     const snippetStart = Math.max(0, matchIdx - 30);
-                    const snippetEnd = Math.min(content.length, matchIdx + query.length + 30);
-                    const blockMatchText = content.substring(snippetStart, snippetEnd);
-                    let highlightedSnippet = blockMatchText.replace(new RegExp(`(${debouncedSearchQuery})`, "gi"), '<span class="kb-search-highlight">$1</span>');
+                    const snippetEnd = Math.min(
+                      content.length,
+                      matchIdx + query.length + 30,
+                    );
+                    const blockMatchText = content.substring(
+                      snippetStart,
+                      snippetEnd,
+                    );
+                    let highlightedSnippet = blockMatchText.replace(
+                      new RegExp(`(${debouncedSearchQuery})`, "gi"),
+                      '<span class="kb-search-highlight">$1</span>',
+                    );
                     results.push({
                       ...topic,
                       matchType: "content",
@@ -1165,14 +1181,12 @@
                   }
                 }
               }
-              // Recurse into children only if they exist
               if (topic.children && topic.children.length > 0) {
                 searchTopics(topic.children);
               }
             }
           }
           searchTopics(topics);
-          // Remove duplicate topic matches (prefer content over title)
           const seenIds = new Set();
           const deduped = [];
           for (const r of results) {
@@ -1184,7 +1198,7 @@
           return deduped;
         }, [topics, debouncedSearchQuery]);
 
-        // Persist active topic to query param and validate it against current topics
+        // Handle iframe security restriction safely using try-catch
         useEffect(() => {
           const params = new URLSearchParams(window.location.search);
           if (activeTopicId) params.set("topic", activeTopicId);
@@ -1192,10 +1206,16 @@
           const newQuery = params.toString();
           const newUrl =
             window.location.pathname + (newQuery ? "?" + newQuery : "");
-          window.history.replaceState({}, "", newUrl);
+          try {
+            window.history.replaceState({}, "", newUrl);
+          } catch (e) {
+            console.debug(
+              "Could not update URL history due to iframe restrictions",
+              e,
+            );
+          }
         }, [activeTopicId]);
 
-        // If the URL contained an id that no longer exists in `topics`, fallback.
         useEffect(() => {
           if (!activeTopicId) {
             const firstId = topics[0]?.id || null;
@@ -1209,11 +1229,9 @@
           }
         }, [topics]);
 
-        // --- HANDLERS ---
         const handleDrillDown = (id) => {
           resetTimer();
           if (searchQuery) {
-            // avoid animating while searching
             setViewPath([...viewPath, id]);
             return;
           }
@@ -1241,6 +1259,7 @@
             setPrevSidebarList([]);
           }, 300);
         };
+
         const handleCreateTopic = (parentId) => {
           const newTopic = {
             id: generateId(),
@@ -1256,7 +1275,7 @@
               updateTree(topics, viewPath[viewPath.length - 1], (n) => ({
                 ...n,
                 children: [...n.children, newTopic],
-              }))
+              })),
             );
         };
 
@@ -1277,23 +1296,27 @@
           reader.onload = (ev) => {
             try {
               setTopics(JSON.parse(ev.target.result));
-              alert("Imported!");
+              setDialogConfig({
+                type: "alert",
+                message: "Data imported successfully!",
+              });
               setSettingsOpen(false);
             } catch (err) {
-              alert("Invalid JSON");
+              setDialogConfig({
+                type: "alert",
+                message: "Invalid JSON file structure.",
+              });
             }
           };
           reader.readAsText(file);
         };
 
-        // --- RENDER ---
         return (
           <div className="relative min-h-screen transition-colors duration-500">
-            {/* BACKGROUND BLOBS (Conditional Rendering) */}
-            {blobAnimationEnabled && (
+            {/* BACKGROUND BLOBS - Preserved exactly as the original working version */}
+            {blobAnimationEnabled && !distractionFree && (
               <>
                 {isSafari ? (
-                  // SAFARI VERSION: Uses CSS Divs + Blur (Fixes square edges in Safari)
                   <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
                     <div className="absolute inset-0 w-full h-full blur-[80px] md:blur-[120px] opacity-60">
                       <div
@@ -1336,7 +1359,6 @@
                     </div>
                   </div>
                 ) : (
-                  // CHROME/OTHERS VERSION: Uses SVG Filter (Smoother gradients on Chrome)
                   <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
                     <svg
                       className="absolute inset-0 w-full h-full"
@@ -1472,77 +1494,96 @@
                 )}
               </>
             )}
-            {/* SCROLL PROGRESS BAR */}
-            <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
-              <div
-                className="h-full bg-t-accent transition-all duration-100 ease-out"
-                style={{ width: `${scrollProgress * 100}%` }}
-              ></div>
-            </div>
+
+            {/* SCROLL PROGRESS */}
+            {!distractionFree && (
+              <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-transparent">
+                <div
+                  className="h-full bg-t-accent transition-all duration-100 ease-out"
+                  style={{ width: `${scrollProgress * 100}%` }}
+                ></div>
+              </div>
+            )}
 
             {/* NAVBAR */}
-            <nav className="sticky top-0 z-[20] w-full glass">
-              <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Hamburger (Mobile) */}
-                  <button
-                    onClick={() => setSidebarOpen(true)}
-                    className="md:hidden p-2 text-t-text hover:bg-t-border rounded-lg"
-                  >
-                    <Icon name="menu" size={24} />
-                  </button>
-
-                  <div className="p-2 bg-t-surface rounded-lg text-t-accent border border-t-border hidden md:block">
-                    <Icon name="rainbow" size={24} />
+            {!distractionFree && (
+              <nav className="sticky top-0 z-[20] w-full glass">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSidebarOpen(true)}
+                      className="md:hidden p-2 text-t-text hover:bg-t-border rounded-lg"
+                    >
+                      <Icon name="menu" size={24} />
+                    </button>
+                    <div className="p-2 bg-t-surface rounded-lg text-t-accent border border-t-border hidden md:block">
+                      <Icon name="rainbow" size={24} />
+                    </div>
+                    <div className="overflow-hidden">
+                      <h1 className="text-lg font-bold tracking-tight truncate max-w-[200px] md:max-w-none">
+                        {topParentName}
+                      </h1>
+                      {activeTopic && topParentName !== activeTopic.title && (
+                        <p className="text-xs text-t-muted flex items-center gap-1 truncate">
+                          <Icon name="corner-down-right" size={10} />{" "}
+                          {activeTopic.title}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <h1 className="text-lg font-bold tracking-tight truncate max-w-[200px] md:max-w-none">
-                      {topParentName}
-                    </h1>
-                    {activeTopic && topParentName !== activeTopic.title && (
-                      <p className="text-xs text-t-muted flex items-center gap-1 truncate">
-                        <Icon name="corner-down-right" size={10} />{" "}
-                        {activeTopic.title}
-                      </p>
-                    )}
+                  <div className="flex items-center gap-2 md:gap-4">
+                    <div className="hidden md:flex flex-col items-end mr-2">
+                      <span className="text-[10px] font-mono text-t-muted uppercase tracking-wider">
+                        Progress
+                      </span>
+                      <span className="text-sm font-bold text-t-accent">
+                        {Math.round(scrollProgress * 100)}%
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setDistractionFree(true)}
+                      className="hidden md:flex p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                      title="Distraction Free (Cmd/Ctrl+D)"
+                    >
+                      <Icon name="maximize" size={20} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setDesktopSidebarCollapsed(!desktopSidebarCollapsed)
+                      }
+                      className="hidden md:flex p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                      title={
+                        desktopSidebarCollapsed
+                          ? "Show sidebar"
+                          : "Hide sidebar"
+                      }
+                    >
+                      <Icon
+                        name={
+                          desktopSidebarCollapsed
+                            ? "panel-right-open"
+                            : "panel-right"
+                        }
+                        size={20}
+                      />
+                    </button>
+                    <button
+                      onClick={() => setSettingsOpen(true)}
+                      className="md:p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                    >
+                      <Icon
+                        name="settings"
+                        size={20}
+                        className="transition md:scale-[0.9] scale-100"
+                      />
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 md:gap-4">
-                  <div className="hidden md:flex flex-col items-end mr-2">
-                    <span className="text-[10px] font-mono text-t-muted uppercase tracking-wider">
-                      Progress
-                    </span>
-                    <span className="text-sm font-bold text-t-accent">
-                      {Math.round(scrollProgress * 100)}%
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setDesktopSidebarCollapsed(!desktopSidebarCollapsed)}
-                    className="hidden md:flex p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
-                    title={desktopSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-                  >
-                    <Icon
-                      name={desktopSidebarCollapsed ? "panel-right-open" : "panel-right"}
-                      size={20}
-                    />
-                  </button>
-                  <button
-                    onClick={() => setSettingsOpen(true)}
-                    className="md:p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
-                  >
-                    <Icon
-                      name="settings"
-                      size={20}
-                      className="transition md:scale-[0.9] scale-100"
-                    />
-                  </button>
-                </div>
-              </div>
-            </nav>
+              </nav>
+            )}
 
             {/* MOBILE SIDEBAR OVERLAY */}
-            {sidebarOpen && (
+            {sidebarOpen && !distractionFree && (
               <div
                 className="fixed inset-0 z-[20] bg-black/50 md:hidden backdrop-blur-sm"
                 onClick={() => setSidebarOpen(false)}
@@ -1551,291 +1592,274 @@
 
             {/* MAIN LAYOUT */}
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row relative z-21">
-              {/* SIDEBAR (Collapsible on Mobile, Sticky on Desktop) */}
-              <aside
-                className={`
-                            fixed inset-y-0 left-0 z-[100] md:z-[19] bg-t-surface/95 backdrop-blur-xl border-r border-t-border transform
-                            md:translate-x-0 md:static md:h-[calc(100vh-4rem)] md:sticky md:top-16 md:bg-t-bg/50 md:backdrop-blur-sm
-                            ${
-                              sidebarOpen
-                                ? "translate-x-0 w-72"
-                                : "-translate-x-full w-72"
-                            }
-                            ${
-                              desktopSidebarCollapsed
-                                ? "md:w-0 md:border-r-0 md:overflow-hidden md:opacity-0"
-                                : "md:w-80 md:border-r md:opacity-100"
-                            }
-                        `}
-              >
-                <div className="flex flex-col h-full p-4">
-                  <div className="flex items-center justify-between mb-4 md:hidden">
-                    <span className="font-bold text-t-text">Menu</span>
-                    <button onClick={() => setSidebarOpen(false)}>
-                      <Icon name="x" />
-                    </button>
-                  </div>
-
-                  {/* Search */}
-                  <div className="relative mb-4 shrink-0">
-                    <input
-                      type="text"
-                      placeholder="Search topics..."
-                      className="w-full bg-t-surface border border-t-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-t-accent focus:ring-1 focus:ring-t-accent transition-all"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <div className="absolute left-3 top-2.5 text-t-muted">
-                      <Icon name="search" size={14} />
+              {/* SIDEBAR */}
+              {!distractionFree && (
+                <aside
+                  className={`fixed inset-y-0 left-0 z-[100] md:z-[19] bg-t-surface/95 backdrop-blur-xl border-r border-t-border transform md:translate-x-0 md:static md:h-[calc(100vh-4rem)] md:sticky md:top-16 md:bg-t-bg/50 md:backdrop-blur-sm ${sidebarOpen ? "translate-x-0 w-72" : "-translate-x-full w-72"} ${desktopSidebarCollapsed ? "md:w-0 md:border-r-0 md:overflow-hidden md:opacity-0" : "md:w-80 md:border-r md:opacity-100"}`}
+                >
+                  <div className="flex flex-col h-full p-4">
+                    <div className="flex items-center justify-between mb-4 md:hidden">
+                      <span className="font-bold text-t-text">Menu</span>
+                      <button onClick={() => setSidebarOpen(false)}>
+                        <Icon name="x" />
+                      </button>
                     </div>
-                  </div>
 
-                  {/* Back Button */}
-                  {!searchQuery && viewPath.length > 0 && (
-                    <button
-                      onClick={handleBack}
-                      className="flex items-center gap-2 mb-4 text-sm font-medium text-t-accent hover:underline shrink-0"
-                    >
-                      <Icon name="arrow-left" size={14} /> Back to Parent
-                    </button>
-                  )}
+                    <div className="relative mb-4 shrink-0">
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="Search (Cmd+K)"
+                        className="w-full bg-t-surface border border-t-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-t-accent focus:ring-1 focus:ring-t-accent transition-all"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      <div className="absolute left-3 top-2.5 text-t-muted">
+                        <Icon name="search" size={14} />
+                      </div>
+                    </div>
 
-                  {/* List */}
-                  <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-1">
-                    <div className="sidebar-list-wrapper h-full">
-                      {!animatingSidebar && (
-                        <div className="relative h-full">
-                          {searchQuery ? (
-                            <div className="space-y-1">
-                              {searchResults.length === 0 && (
-                                <div className="text-t-muted text-sm px-2 py-4">No results found.</div>
-                              )}
-                              {searchResults.map((result) => (
-                                <button
-                                  key={result.matchId || (result.id + (result.matchBlockIdx !== undefined ? "-" + result.matchBlockIdx : ""))}
-                                  className={`w-full text-left group flex items-center gap-2 p-2 rounded-lg transition-all
-                                    ${result.id === activeTopicId ? "bg-t-accent text-t-accent-fg shadow-md" : "text-t-text hover:bg-t-surface hover:text-t-accent"}
-                                  `}
-                                  onClick={() => {
-                                    if (result.id === activeTopicId) {
-                                      setActiveTopicId(null);
-                                      setViewPath([]);
-                                      resetTimer();
-                                    } else {
-                                      setActiveTopicId(result.id);
-                                      setViewPath(result.parentPath || []);
-                                      resetTimer();
+                    {!searchQuery && viewPath.length > 0 && (
+                      <button
+                        onClick={handleBack}
+                        className="flex items-center gap-2 mb-4 text-sm font-medium text-t-accent hover:underline shrink-0"
+                      >
+                        <Icon name="arrow-left" size={14} /> Back
+                      </button>
+                    )}
+
+                    {}
+                    <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+                      <div className="sidebar-list-wrapper h-full">
+                        {!animatingSidebar && (
+                          <div className="relative h-full">
+                            {searchQuery ? (
+                              <div className="space-y-1">
+                                {searchResults.length === 0 && (
+                                  <div className="text-t-muted text-sm px-2 py-4">
+                                    No results found.
+                                  </div>
+                                )}
+                                {searchResults.map((result) => (
+                                  <button
+                                    key={
+                                      result.matchId ||
+                                      result.id +
+                                        (result.matchBlockIdx !== undefined
+                                          ? "-" + result.matchBlockIdx
+                                          : "")
                                     }
-                                    setSidebarOpen(false);
-                                    setEditMode(false);
-                                    setTimeout(() => {
-                                      // Scroll to the first matching word in the content
-                                      if (result.matchType === "content" && result.matchBlockIdx !== null) {
-                                        setTimeout(() => {
-                                          const blockEls = document.querySelectorAll(".kb-block");
-                                          const blockEl = blockEls[result.matchBlockIdx];
-                                          if (blockEl) {
-                                            const inner = blockEl.innerHTML;
-                                            const query = searchQuery;
-                                            const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "i");
-                                            const newInner = inner.replace(regex, (m) => `<span class='kb-search-highlight'>${m}</span>`);
-                                            blockEl.innerHTML = newInner;
-                                            const highlight = blockEl.querySelector('.kb-search-highlight');
-                                            if (highlight) {
-                                              highlight.scrollIntoView({ behavior: "smooth", block: "center" });
-                                            } else {
-                                              blockEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                            }
-                                          }
-                                        }, 200);
+                                    className={`w-full text-left group flex items-center gap-2 p-2 rounded-lg transition-all ${result.id === activeTopicId ? "bg-t-accent text-t-accent-fg shadow-md" : "text-t-text hover:bg-t-surface hover:text-t-accent"}`}
+                                    onClick={() => {
+                                      if (result.id === activeTopicId) {
+                                        setActiveTopicId(null);
+                                        setViewPath([]);
+                                        resetTimer();
+                                      } else {
+                                        setActiveTopicId(result.id);
+                                        setViewPath(result.parentPath || []);
+                                        resetTimer();
                                       }
-                                    }, 100);
+                                      setSidebarOpen(false);
+                                      setEditMode(false);
+                                      setViewMode("content");
+                                      setTimeout(() => {
+                                        if (
+                                          result.matchType === "content" &&
+                                          result.matchBlockIdx !== null
+                                        ) {
+                                          setTimeout(() => {
+                                            const blockEls =
+                                              document.querySelectorAll(
+                                                ".kb-block",
+                                              );
+                                            const blockEl =
+                                              blockEls[result.matchBlockIdx];
+                                            if (blockEl) {
+                                              const inner = blockEl.innerHTML;
+                                              const query = searchQuery;
+                                              const regex = new RegExp(
+                                                query.replace(
+                                                  /[.*+?^${}()|[\]\\]/g,
+                                                  "\\$&",
+                                                ),
+                                                "i",
+                                              );
+                                              const newInner = inner.replace(
+                                                regex,
+                                                (m) =>
+                                                  `<span class='kb-search-highlight'>${m}</span>`,
+                                              );
+                                              blockEl.innerHTML = newInner;
+                                              const highlight =
+                                                blockEl.querySelector(
+                                                  ".kb-search-highlight",
+                                                );
+                                              if (highlight) {
+                                                highlight.scrollIntoView({
+                                                  behavior: "smooth",
+                                                  block: "center",
+                                                });
+                                              } else {
+                                                blockEl.scrollIntoView({
+                                                  behavior: "smooth",
+                                                  block: "center",
+                                                });
+                                              }
+                                            }
+                                          }, 200);
+                                        }
+                                      }, 100);
+                                    }}
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <Icon name={result.icon} size={16} />
+                                      <span className="truncate text-sm font-medium select-none">
+                                        {result.title}
+                                      </span>
+                                    </span>
+                                    {result.matchType === "content" &&
+                                      result.matchSnippet && (
+                                        <span className="block text-xs text-t-muted mt-0.5 px-1 truncate">
+                                          ...{result.matchSnippet}...
+                                        </span>
+                                      )}
+                                    {result.matchType === "title" && (
+                                      <span className="block text-xs text-t-muted mt-0.5 px-1">
+                                        (in title)
+                                      </span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              currentSidebarList.map((topic) => (
+                                <SidebarItem
+                                  key={topic.id}
+                                  topic={topic}
+                                  activeId={activeTopicId}
+                                  isDragged={draggedId === topic.id}
+                                  isDragOver={dragOverId === topic.id}
+                                  onDragStart={(id) => setDraggedId(id)}
+                                  onDragOver={(id) => setDragOverId(id)}
+                                  onDragLeave={() => setDragOverId(null)}
+                                  onDrop={(targetId) => {
+                                    if (draggedId && draggedId !== targetId) {
+                                      const newTopics = moveItemInTree(
+                                        topics,
+                                        draggedId,
+                                        targetId,
+                                        viewPath,
+                                      );
+                                      setTopics(newTopics);
+                                    }
+                                    setDraggedId(null);
+                                    setDragOverId(null);
                                   }}
-                                >
-                                  <span className="flex items-center gap-2">
-                                    <Icon name={result.icon} size={16} />
-                                    <span className="truncate text-sm font-medium select-none">
-                                      {result.title}
-                                    </span>
-                                  </span>
-                                  {result.matchType === "content" && result.matchSnippet && (
-                                    <span className="block text-xs text-t-muted mt-0.5 px-1 truncate">
-                                      ...{result.matchSnippet}...
-                                    </span>
-                                  )}
-                                  {result.matchType === "title" && (
-                                    <span className="block text-xs text-t-muted mt-0.5 px-1">(in title)</span>
-                                  )}
-                                </button>
+                                  onClick={() => {
+                                    selectTopic(topic.id);
+                                    setEditMode(false);
+                                    setViewMode("content");
+                                    if (window.innerWidth < 768)
+                                      setSidebarOpen(false);
+                                  }}
+                                  onDrillDown={() => handleDrillDown(topic.id)}
+                                  onDelete={() => {
+                                    setDialogConfig({
+                                      type: "confirm",
+                                      message:
+                                        "Delete this topic and all its subtopics?",
+                                      onConfirm: () => {
+                                        setTopics(
+                                          deleteFromTree(topics, topic.id),
+                                        );
+                                        if (activeTopicId === topic.id)
+                                          setActiveTopicId(null);
+                                      },
+                                    });
+                                  }}
+                                />
+                              ))
+                            )}
+                            {currentSidebarList.length === 0 &&
+                              !searchQuery && (
+                                <div className="text-center py-10 text-t-muted text-sm italic">
+                                  Empty Folder
+                                </div>
+                              )}
+                          </div>
+                        )}
+                        {animatingSidebar && (
+                          <>
+                            <div
+                              className={`sidebar-list-pane ${{ forward: "slide-out-to-left", back: "slide-out-to-right" }[navDirection]}`}
+                            >
+                              {(searchQuery
+                                ? searchResults
+                                : prevSidebarList
+                              ).map((topic) => (
+                                <SidebarItem
+                                  key={"prev-" + topic.id}
+                                  topic={topic}
+                                  activeId={activeTopicId}
+                                  isDragged={false}
+                                  isDragOver={false}
+                                  onDragStart={() => {}}
+                                  onDragOver={() => {}}
+                                  onDragLeave={() => {}}
+                                  onDrop={() => {}}
+                                  onClick={() => {}}
+                                  onDrillDown={() => {}}
+                                  onDelete={() => {}}
+                                />
                               ))}
                             </div>
-                          ) : (
-                            currentSidebarList.map((topic) => (
-                              <SidebarItem
-                                key={topic.id}
-                                topic={topic}
-                                activeId={activeTopicId}
-                                isDragged={draggedId === topic.id}
-                                isDragOver={dragOverId === topic.id}
-                                onDragStart={(id) => setDraggedId(id)}
-                                onDragOver={(id) => setDragOverId(id)}
-                                onDragLeave={() => setDragOverId(null)}
-                                onDrop={(targetId) => {
-                                  if (draggedId && draggedId !== targetId) {
-                                    const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
-                                    setTopics(newTopics);
-                                  }
-                                  setDraggedId(null);
-                                  setDragOverId(null);
-                                }}
-                                onClick={() => {
-                                  selectTopic(topic.id);
-                                  setEditMode(false);
-                                  if (window.innerWidth < 768)
-                                    setSidebarOpen(false);
-                                }}
-                                onDrillDown={() => handleDrillDown(topic.id)}
-                                onDelete={() => {
-                                  if (
-                                    confirm("Delete this topic and subtopics?")
-                                  ) {
-                                    setTopics(deleteFromTree(topics, topic.id));
-                                    if (activeTopicId === topic.id)
-                                      setActiveTopicId(null);
-                                  }
-                                }}
-                              />
-                            ))
-                          )}
-                          {currentSidebarList.length === 0 && !searchQuery && (
-                            <div className="text-center py-10 text-t-muted text-sm italic">
-                              Empty Folder
+                            <div
+                              className={`sidebar-list-pane ${{ forward: "slide-in-from-right", back: "slide-in-from-left" }[navDirection]}`}
+                            >
+                              {(searchQuery
+                                ? searchResults
+                                : currentSidebarList
+                              ).map((topic) => (
+                                <SidebarItem
+                                  key={topic.id}
+                                  topic={topic}
+                                  activeId={activeTopicId}
+                                  isDragged={false}
+                                  isDragOver={false}
+                                  onDragStart={() => {}}
+                                  onDragOver={() => {}}
+                                  onDragLeave={() => {}}
+                                  onDrop={() => {}}
+                                  onClick={() => {}}
+                                  onDrillDown={() => {}}
+                                  onDelete={() => {}}
+                                />
+                              ))}
                             </div>
-                          )}
-                        </div>
-                      )}
-
-                      {animatingSidebar && (
-                        <>
-                          <div
-                            className={`sidebar-list-pane ${
-                              {
-                                forward: "slide-out-to-left",
-                                back: "slide-out-to-right",
-                              }[navDirection]
-                            }`}
-                          >
-                            {(searchQuery
-                              ? searchResults
-                              : prevSidebarList
-                            ).map((topic) => (
-                              <SidebarItem
-                                key={"prev-" + topic.id}
-                                topic={topic}
-                                activeId={activeTopicId}
-                                isDragged={draggedId === topic.id}
-                                isDragOver={dragOverId === topic.id}
-                                onDragStart={(id) => setDraggedId(id)}
-                                onDragOver={(id) => setDragOverId(id)}
-                                onDragLeave={() => setDragOverId(null)}
-                                onDrop={(targetId) => {
-                                  if (draggedId && draggedId !== targetId) {
-                                    const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
-                                    setTopics(newTopics);
-                                  }
-                                  setDraggedId(null);
-                                  setDragOverId(null);
-                                }}
-                                onClick={() => {
-                                  selectTopic(topic.id);
-                                  setEditMode(false);
-                                  if (window.innerWidth < 768)
-                                    setSidebarOpen(false);
-                                }}
-                                onDrillDown={() => handleDrillDown(topic.id)}
-                                onDelete={() => {
-                                  if (
-                                    confirm("Delete this topic and subtopics?")
-                                  ) {
-                                    setTopics(deleteFromTree(topics, topic.id));
-                                    if (activeTopicId === topic.id)
-                                      setActiveTopicId(null);
-                                  }
-                                }}
-                              />
-                            ))}
-                          </div>
-
-                          <div
-                            className={`sidebar-list-pane ${
-                              {
-                                forward: "slide-in-from-right",
-                                back: "slide-in-from-left",
-                              }[navDirection]
-                            }`}
-                          >
-                            {(searchQuery
-                              ? searchResults
-                              : currentSidebarList
-                            ).map((topic) => (
-                              <SidebarItem
-                                key={topic.id}
-                                topic={topic}
-                                activeId={activeTopicId}
-                                isDragged={draggedId === topic.id}
-                                isDragOver={dragOverId === topic.id}
-                                onDragStart={(id) => setDraggedId(id)}
-                                onDragOver={(id) => setDragOverId(id)}
-                                onDragLeave={() => setDragOverId(null)}
-                                onDrop={(targetId) => {
-                                  if (draggedId && draggedId !== targetId) {
-                                    const newTopics = moveItemInTree(topics, draggedId, targetId, viewPath);
-                                    setTopics(newTopics);
-                                  }
-                                  setDraggedId(null);
-                                  setDragOverId(null);
-                                }}
-                                onClick={() => {
-                                  selectTopic(topic.id);
-                                  setEditMode(false);
-                                  if (window.innerWidth < 768)
-                                    setSidebarOpen(false);
-                                }}
-                                onDrillDown={() => handleDrillDown(topic.id)}
-                                onDelete={() => {
-                                  if (
-                                    confirm("Delete this topic and subtopics?")
-                                  ) {
-                                    setTopics(deleteFromTree(topics, topic.id));
-                                    if (activeTopicId === topic.id)
-                                      setActiveTopicId(null);
-                                  }
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Add Button */}
-                  {!searchQuery && (
-                    <button
-                      onClick={() => handleCreateTopic()}
-                      className="mt-4 w-full py-2.5 bg-t-surface border border-t-border hover:border-t-accent text-t-text rounded-lg flex items-center justify-center gap-2 font-medium transition shadow-sm shrink-0"
-                    >
-                      <Icon name="plus" size={16} /> Add Topic
-                    </button>
-                  )}
-                </div>
-              </aside>
+                    {!searchQuery && (
+                      <button
+                        onClick={() => handleCreateTopic()}
+                        className="mt-4 w-full py-2.5 bg-t-surface border border-t-border hover:border-t-accent text-t-text rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition shadow-sm shrink-0"
+                      >
+                        <Icon name="plus" size={16} /> Add Topic (Cmd+N)
+                      </button>
+                    )}
+                  </div>
+                </aside>
+              )}
 
               {/* CONTENT AREA */}
-              <main className="flex-1 p-4 md:p-12 min-h-[calc(100vh-4rem)]">
+              <main
+                className={`flex-1 ${distractionFree ? "p-4 md:p-12 min-h-screen max-w-4xl mx-auto pt-16 w-full" : "p-4 md:p-12 min-h-[calc(100vh-4rem)]"}`}
+              >
                 {activeTopic ? (
                   <div className="max-w-3xl mx-auto animate-fade-in pb-20">
-                    {/* Content Header */}
                     <div className="flex flex-col md:flex-row md:items-start justify-between border-b border-t-border pb-6 mb-8 gap-4">
                       <div className="flex-1 min-w-0">
                         {editMode ? (
@@ -1872,13 +1896,33 @@
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 bg-t-surface rounded-xl border border-t-border text-t-accent shadow-sm hidden md:block">
-                              <Icon name={activeTopic.icon} size={32} />
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-4">
+                              <div className="p-3 bg-t-surface rounded-xl border border-t-border text-t-accent shadow-sm hidden md:block">
+                                <Icon name={activeTopic.icon} size={32} />
+                              </div>
+                              <h1 className="text-3xl md:text-4xl font-bold text-t-text break-words">
+                                {activeTopic.title}
+                              </h1>
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-t-text break-words">
-                              {activeTopic.title}
-                            </h1>
+
+                            {}
+                            {!editMode && (
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => setViewMode("content")}
+                                  className={`px-3 py-1 rounded-md text-xs font-medium transition ${viewMode === "content" ? "bg-t-accent text-t-accent-fg" : "bg-t-surface text-t-muted hover:text-t-text border border-t-border"}`}
+                                >
+                                  Content
+                                </button>
+                                <button
+                                  onClick={() => setViewMode("graph")}
+                                  className={`px-3 py-1 rounded-md text-xs font-medium transition ${viewMode === "graph" ? "bg-t-accent text-t-accent-fg" : "bg-t-surface text-t-muted hover:text-t-text border border-t-border"}`}
+                                >
+                                  Graph View
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1892,12 +1936,13 @@
                                   updateTree(
                                     topics,
                                     activeTopic.id,
-                                    () => tempTopicData
-                                  )
+                                    () => tempTopicData,
+                                  ),
                                 );
                                 setEditMode(false);
                               }}
                               className="h-10 px-4 bg-t-accent text-t-accent-fg rounded-lg font-medium shadow-md hover:brightness-110 transition text-sm flex items-center justify-center"
+                              title="Save (Cmd/Ctrl+S)"
                             >
                               Save
                             </button>
@@ -1916,14 +1961,10 @@
                                   updateTree(topics, activeTopic.id, (n) => ({
                                     ...n,
                                     completed: !n.completed,
-                                  }))
+                                  })),
                                 )
                               }
-                              className={`h-10 w-10 flex items-center justify-center rounded-lg border transition ${
-                                activeTopic.completed
-                                  ? "bg-green-100 border-green-300 text-green-700"
-                                  : "bg-t-surface border-t-border text-t-muted hover:text-t-text"
-                              }`}
+                              className={`h-10 w-10 flex items-center justify-center rounded-lg border transition ${activeTopic.completed ? "bg-green-100 border-green-300 text-green-700" : "bg-t-surface border-t-border text-t-muted hover:text-t-text"}`}
                               title={
                                 activeTopic.completed
                                   ? "Mark Incomplete"
@@ -1943,8 +1984,10 @@
                               onClick={() => {
                                 setTempTopicData(activeTopic);
                                 setEditMode(true);
+                                setViewMode("content");
                               }}
                               className="h-10 px-4 bg-t-accent text-t-accent-fg rounded-lg font-medium shadow hover:brightness-110 transition flex items-center gap-2 text-sm"
+                              title="Edit (Cmd/Ctrl+E)"
                             >
                               <Icon name="edit-2" size={16} />{" "}
                               <span className="hidden sm:inline">Edit</span>
@@ -1954,110 +1997,143 @@
                       </div>
                     </div>
 
-                    {/* Content Blocks */}
-                    <div className="space-y-8">
-                      {(editMode
-                        ? tempTopicData.blocks
-                        : activeTopic.blocks
-                      ).map((block, idx) => (
-                        <div key={block.id} className={editMode ? "group relative" : "kb-block group relative"} style={editMode ? {} : { scrollMarginTop: 120 }}>
-                          {editMode ? (
-                            <div className="bg-t-surface p-4 rounded-xl border border-t-border shadow-sm">
-                              <div className="flex justify-end gap-2 mb-2 opacity-50 group-hover:opacity-100 transition">
-                                <button
-                                  onClick={() => {
-                                    const newBlocks = [...tempTopicData.blocks];
-                                    if (idx > 0) {
-                                      [newBlocks[idx], newBlocks[idx - 1]] = [
-                                        newBlocks[idx - 1],
-                                        newBlocks[idx],
+                    {/* CONDITIONAL RENDER: Graph vs Content */}
+                    {!editMode && viewMode === "graph" ? (
+                      <GraphView
+                        topics={[
+                          topics.find((t) => t.id === viewPath[0]) || topics[0],
+                        ]}
+                        activeTopicId={activeTopic.id}
+                        onNodeClick={(id) => {
+                          // Find topic by ID
+                          const clickedTopic = findNode(topics, id);
+                          if (clickedTopic) {
+                            selectTopic(clickedTopic.id);
+                            // Expand view path safely by looking up ancestors if needed
+                            // For simplicity in this demo, just let it navigate there
+                            setViewMode("content");
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="space-y-8">
+                        {(editMode
+                          ? tempTopicData.blocks
+                          : activeTopic.blocks
+                        ).map((block, idx) => (
+                          <div
+                            key={block.id}
+                            className={
+                              editMode
+                                ? "group relative"
+                                : "kb-block group relative"
+                            }
+                            style={editMode ? {} : { scrollMarginTop: 120 }}
+                          >
+                            {editMode ? (
+                              <div className="bg-t-surface p-4 rounded-xl border border-t-border shadow-sm">
+                                <div className="flex justify-end gap-2 mb-2 opacity-50 group-hover:opacity-100 transition">
+                                  <button
+                                    onClick={() => {
+                                      const newBlocks = [
+                                        ...tempTopicData.blocks,
                                       ];
+                                      if (idx > 0) {
+                                        [newBlocks[idx], newBlocks[idx - 1]] = [
+                                          newBlocks[idx - 1],
+                                          newBlocks[idx],
+                                        ];
+                                        setTempTopicData({
+                                          ...tempTopicData,
+                                          blocks: newBlocks,
+                                        });
+                                      }
+                                    }}
+                                    className="p-1 hover:text-t-accent"
+                                  >
+                                    <Icon name="arrow-up" size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const newBlocks = [
+                                        ...tempTopicData.blocks,
+                                      ];
+                                      if (
+                                        idx <
+                                        tempTopicData.blocks.length - 1
+                                      ) {
+                                        [newBlocks[idx], newBlocks[idx + 1]] = [
+                                          newBlocks[idx + 1],
+                                          newBlocks[idx],
+                                        ];
+                                        setTempTopicData({
+                                          ...tempTopicData,
+                                          blocks: newBlocks,
+                                        });
+                                      }
+                                    }}
+                                    className="p-1 hover:text-t-accent"
+                                  >
+                                    <Icon name="arrow-down" size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() =>
                                       setTempTopicData({
                                         ...tempTopicData,
-                                        blocks: newBlocks,
-                                      });
+                                        blocks: tempTopicData.blocks.filter(
+                                          (b) => b.id !== block.id,
+                                        ),
+                                      })
                                     }
-                                  }}
-                                  className="p-1 hover:text-t-accent"
-                                >
-                                  <Icon name="arrow-up" size={14} />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const newBlocks = [...tempTopicData.blocks];
-                                    if (idx < tempTopicData.blocks.length - 1) {
-                                      [newBlocks[idx], newBlocks[idx + 1]] = [
-                                        newBlocks[idx + 1],
-                                        newBlocks[idx],
-                                      ];
-                                      setTempTopicData({
-                                        ...tempTopicData,
-                                        blocks: newBlocks,
-                                      });
-                                    }
-                                  }}
-                                  className="p-1 hover:text-t-accent"
-                                >
-                                  <Icon name="arrow-down" size={14} />
-                                </button>
-                                <button
-                                  onClick={() =>
+                                    className="p-1 text-red-400 hover:text-red-600"
+                                  >
+                                    <Icon name="trash-2" size={14} />
+                                  </button>
+                                </div>
+                                <textarea
+                                  className="w-full bg-transparent resize-none focus:outline-none font-mono text-sm min-h-[500px] text-t-text"
+                                  value={block.content}
+                                  onChange={(e) => {
+                                    const newBlocks = tempTopicData.blocks.map(
+                                      (b) =>
+                                        b.id === block.id
+                                          ? { ...b, content: e.target.value }
+                                          : b,
+                                    );
                                     setTempTopicData({
                                       ...tempTopicData,
-                                      blocks: tempTopicData.blocks.filter(
-                                        (b) => b.id !== block.id
-                                      ),
-                                    })
-                                  }
-                                  className="p-1 text-red-400 hover:text-red-600"
-                                >
-                                  <Icon name="trash-2" size={14} />
-                                </button>
+                                      blocks: newBlocks,
+                                    });
+                                  }}
+                                  placeholder="Type Markdown content here..."
+                                />
                               </div>
-                              <textarea
-                                className="w-full bg-transparent resize-none focus:outline-none font-mono text-sm min-h-[500px] text-t-text"
-                                value={block.content}
-                                onChange={(e) => {
-                                  const newBlocks = tempTopicData.blocks.map(
-                                    (b) =>
-                                      b.id === block.id
-                                        ? { ...b, content: e.target.value }
-                                        : b
-                                  );
-                                  setTempTopicData({
-                                    ...tempTopicData,
-                                    blocks: newBlocks,
-                                  });
-                                }}
-                                placeholder="Type Markdown content here..."
+                            ) : (
+                              <MarkdownViewer
+                                content={block.content}
+                                fontSizeClass={FONT_SIZES[fontSize]}
                               />
-                            </div>
-                          ) : (
-                            <MarkdownViewer
-                              content={block.content}
-                              fontSizeClass={FONT_SIZES[fontSize]}
-                            />
-                          )}
-                        </div>
-                      ))}
-
-                      {editMode && (
-                        <button
-                          onClick={() =>
-                            setTempTopicData({
-                              ...tempTopicData,
-                              blocks: [
-                                ...tempTopicData.blocks,
-                                { id: generateId(), content: "" },
-                              ],
-                            })
-                          }
-                          className="w-full py-4 border-2 border-dashed border-t-border rounded-xl text-t-muted hover:border-t-accent hover:text-t-accent transition flex items-center justify-center gap-2"
-                        >
-                          <Icon name="plus" /> Add Content Block
-                        </button>
-                      )}
-                    </div>
+                            )}
+                          </div>
+                        ))}
+                        {editMode && (
+                          <button
+                            onClick={() =>
+                              setTempTopicData({
+                                ...tempTopicData,
+                                blocks: [
+                                  ...tempTopicData.blocks,
+                                  { id: generateId(), content: "" },
+                                ],
+                              })
+                            }
+                            className="w-full py-4 border-2 border-dashed border-t-border rounded-xl text-t-muted hover:border-t-accent hover:text-t-accent transition flex items-center justify-center gap-2"
+                          >
+                            <Icon name="plus" /> Add Content Block
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="h-[50vh] flex flex-col items-center justify-center text-t-muted">
@@ -2068,14 +2144,32 @@
               </main>
             </div>
 
-            {activeTopic && (
+            {/* Distraction Free Exit Button */}
+            {distractionFree && (
+              <button
+                onClick={() => setDistractionFree(false)}
+                className="fixed top-4 right-4 z-[100] p-3 bg-t-surface/80 backdrop-blur border border-t-border rounded-full shadow-lg text-t-text hover:text-t-accent transition"
+                title="Exit Distraction Free Mode (Cmd/Ctrl+D)"
+              >
+                <Icon name="minimize-2" size={20} />
+              </button>
+            )}
+
+            {/* TIMER */}
+            {activeTopic && !distractionFree && (
               <div
                 className="fixed bottom-4 right-4 z-[70] rounded-full border border-t-border bg-t-surface/95 px-3 py-2 shadow-2xl backdrop-blur-xl text-t-muted flex items-center gap-2 text-xs font-medium cursor-default select-none"
                 title="Double-click to restart timer"
                 onDoubleClick={resetTimer}
               >
                 <Icon name="clock" size={14} />
-                <span className="min-w-[2.5rem] text-center font-mono" aria-label="Topic timer">{Math.floor(timerSeconds / 60)}:{String(timerSeconds % 60).padStart(2, "0")}</span>
+                <span
+                  className="min-w-[2.5rem] text-center font-mono"
+                  aria-label="Topic timer"
+                >
+                  {Math.floor(timerSeconds / 60)}:
+                  {String(timerSeconds % 60).padStart(2, "0")}
+                </span>
               </div>
             )}
 
@@ -2091,6 +2185,40 @@
               blobAnimationEnabled={blobAnimationEnabled}
               onSetBlobAnimation={setBlobAnimationEnabled}
             />
+
+            {/* Custom Dialog for Alerts and Confirms */}
+            {dialogConfig && (
+              <div
+                className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
+                onClick={() => setDialogConfig(null)}
+              >
+                <div
+                  className="bg-t-surface border border-t-border rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="text-t-text mb-6">{dialogConfig.message}</p>
+                  <div className="flex justify-end gap-3">
+                    {dialogConfig.type === "confirm" && (
+                      <button
+                        onClick={() => setDialogConfig(null)}
+                        className="px-4 py-2 bg-t-bg border border-t-border text-t-text rounded-lg text-sm font-medium hover:bg-t-border transition"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (dialogConfig.onConfirm) dialogConfig.onConfirm();
+                        setDialogConfig(null);
+                      }}
+                      className="px-4 py-2 bg-t-accent text-t-accent-fg rounded-lg text-sm font-medium hover:brightness-110 transition"
+                    >
+                      OK
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       };
@@ -2110,13 +2238,7 @@
       }) => (
         <div>
           <div
-            className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-move ${
-              isDragged ? "opacity-40" : ""
-            } ${
-              topic.id === activeId
-                ? "bg-t-accent text-t-accent-fg shadow-md"
-                : "text-t-text hover:bg-t-surface hover:text-t-accent"
-            }`}
+            className={`group flex items-center justify-between p-2 rounded-lg transition-all cursor-move ${isDragged ? "opacity-40" : ""} ${topic.id === activeId ? "bg-t-accent text-t-accent-fg shadow-md" : "text-t-text hover:bg-t-surface hover:text-t-accent"}`}
             onClick={onClick}
             onDoubleClick={onDrillDown}
             draggable
@@ -2139,11 +2261,7 @@
               </span>
               {topic.children.length > 0 && (
                 <span
-                  className={`text-[10px] px-1.5 rounded-full ${
-                    topic.id === activeId
-                      ? "bg-white/20"
-                      : "bg-t-border text-t-muted"
-                  }`}
+                  className={`text-[10px] px-1.5 rounded-full ${topic.id === activeId ? "bg-white/20" : "bg-t-border text-t-muted"}`}
                 >
                   {topic.children.length}
                 </span>
@@ -2155,11 +2273,7 @@
                   e.stopPropagation();
                   onDrillDown();
                 }}
-                className={`p-1 rounded md:hidden ${
-                  topic.id === activeId
-                    ? "hover:bg-white/20"
-                    : "hover:bg-t-border"
-                }`}
+                className={`p-1 rounded md:hidden ${topic.id === activeId ? "hover:bg-white/20" : "hover:bg-t-border"}`}
                 title="Open Subtopics"
               >
                 <Icon name="chevron-right" size={14} />
@@ -2169,11 +2283,7 @@
                   e.stopPropagation();
                   onDelete();
                 }}
-                className={`p-1 rounded hidden md:block ${
-                  topic.id === activeId
-                    ? "hover:bg-white/20"
-                    : "hover:bg-t-border hover:text-red-500"
-                }`}
+                className={`p-1 rounded hidden md:block ${topic.id === activeId ? "hover:bg-white/20" : "hover:bg-t-border hover:text-red-500"}`}
               >
                 <Icon name="trash-2" size={14} />
               </button>
@@ -2187,15 +2297,6 @@
 
       const root = ReactDOM.createRoot(document.getElementById("root"));
       root.render(<App />);
-    </script>
-    <script>
-      // Register service worker
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("sw.js")
-          .then(() => console.log("Service worker registered"))
-          .catch((err) => console.warn("SW registration failed", err));
-      }
     </script>
   </body>
 </html>
