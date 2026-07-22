@@ -814,6 +814,8 @@
             THEMES[loadSetting("kb_theme", "paper")].hasBlobs
           )
         );
+        const [timerSeconds, setTimerSeconds] = useState(0);
+        const timerRef = useRef(null);
         const [tempTopicData, setTempTopicData] = useState(null);
         const [settingsOpen, setSettingsOpen] = useState(false);
         const [scrollProgress, setScrollProgress] = useState(0);
@@ -930,6 +932,51 @@
             window.scrollTo(0, 0);
           }
         }, [activeTopicId]);
+
+        useEffect(() => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setTimerSeconds(0);
+
+          if (activeTopicId) {
+            timerRef.current = setInterval(() => {
+              setTimerSeconds((prev) => prev + 1);
+            }, 1000);
+          }
+
+          return () => {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+          };
+        }, [activeTopicId]);
+
+        const resetTimer = () => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setTimerSeconds(0);
+          if (activeTopicId) {
+            timerRef.current = setInterval(() => {
+              setTimerSeconds((prev) => prev + 1);
+            }, 1000);
+          }
+        };
+
+        const selectTopic = (topicId) => {
+          if (topicId === activeTopicId) {
+            setActiveTopicId(null);
+            setViewPath([]);
+            resetTimer();
+          } else {
+            setActiveTopicId(topicId);
+            resetTimer();
+          }
+        };
 
         // --- HELPERS ---
         const findNode = (nodes, id) => {
@@ -1164,6 +1211,7 @@
 
         // --- HANDLERS ---
         const handleDrillDown = (id) => {
+          resetTimer();
           if (searchQuery) {
             // avoid animating while searching
             setViewPath([...viewPath, id]);
@@ -1569,9 +1617,16 @@
                                     ${result.id === activeTopicId ? "bg-t-accent text-t-accent-fg shadow-md" : "text-t-text hover:bg-t-surface hover:text-t-accent"}
                                   `}
                                   onClick={() => {
-                                    setActiveTopicId(result.id);
+                                    if (result.id === activeTopicId) {
+                                      setActiveTopicId(null);
+                                      setViewPath([]);
+                                      resetTimer();
+                                    } else {
+                                      setActiveTopicId(result.id);
+                                      setViewPath(result.parentPath || []);
+                                      resetTimer();
+                                    }
                                     setSidebarOpen(false);
-                                    setViewPath(result.parentPath || []);
                                     setEditMode(false);
                                     setTimeout(() => {
                                       // Scroll to the first matching word in the content
@@ -1634,7 +1689,7 @@
                                   setDragOverId(null);
                                 }}
                                 onClick={() => {
-                                  setActiveTopicId(topic.id);
+                                  selectTopic(topic.id);
                                   setEditMode(false);
                                   if (window.innerWidth < 768)
                                     setSidebarOpen(false);
@@ -1692,7 +1747,7 @@
                                   setDragOverId(null);
                                 }}
                                 onClick={() => {
-                                  setActiveTopicId(topic.id);
+                                  selectTopic(topic.id);
                                   setEditMode(false);
                                   if (window.innerWidth < 768)
                                     setSidebarOpen(false);
@@ -1741,7 +1796,7 @@
                                   setDragOverId(null);
                                 }}
                                 onClick={() => {
-                                  setActiveTopicId(topic.id);
+                                  selectTopic(topic.id);
                                   setEditMode(false);
                                   if (window.innerWidth < 768)
                                     setSidebarOpen(false);
@@ -2012,6 +2067,17 @@
                 )}
               </main>
             </div>
+
+            {activeTopic && (
+              <div
+                className="fixed bottom-4 right-4 z-[70] rounded-full border border-t-border bg-t-surface/95 px-3 py-2 shadow-2xl backdrop-blur-xl text-t-muted flex items-center gap-2 text-xs font-medium cursor-default select-none"
+                title="Double-click to restart timer"
+                onDoubleClick={resetTimer}
+              >
+                <Icon name="clock" size={14} />
+                <span className="min-w-[2.5rem] text-center font-mono" aria-label="Topic timer">{Math.floor(timerSeconds / 60)}:{String(timerSeconds % 60).padStart(2, "0")}</span>
+              </div>
+            )}
 
             <SettingsModal
               isOpen={settingsOpen}
