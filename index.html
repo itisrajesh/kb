@@ -1041,9 +1041,11 @@
             if (clickCountRef.current >= 3) {
               resetTimer();
             } else if (clickCountRef.current === 2) {
-              pauseTimer();
-            } else if (clickCountRef.current === 1 && !timerRunning) {
-              resumeTimer();
+              if (timerRunning) {
+                pauseTimer();
+              } else {
+                resumeTimer();
+              }
             }
             clickCountRef.current = 0;
             clickTimerRef.current = null;
