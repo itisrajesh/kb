@@ -817,7 +817,10 @@
         );
 
         const [timerSeconds, setTimerSeconds] = useState(0);
+        const [timerRunning, setTimerRunning] = useState(true);
         const timerRef = useRef(null);
+        const clickCountRef = useRef(0);
+        const clickTimerRef = useRef(null);
         const [tempTopicData, setTempTopicData] = useState(null);
         const [settingsOpen, setSettingsOpen] = useState(false);
         const [scrollProgress, setScrollProgress] = useState(0);
@@ -988,6 +991,9 @@
             timerRef.current = setInterval(() => {
               setTimerSeconds((prev) => prev + 1);
             }, 1000);
+            setTimerRunning(true);
+          } else {
+            setTimerRunning(false);
           }
           return () => {
             if (timerRef.current) {
@@ -996,6 +1002,61 @@
             }
           };
         }, [activeTopicId]);
+
+        const startTimer = () => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          timerRef.current = setInterval(() => {
+            setTimerSeconds((prev) => prev + 1);
+          }, 1000);
+          setTimerRunning(true);
+        };
+
+        const pauseTimer = () => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setTimerRunning(false);
+        };
+
+        const resumeTimer = () => {
+          if (!activeTopicId) return;
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          timerRef.current = setInterval(() => {
+            setTimerSeconds((prev) => prev + 1);
+          }, 1000);
+          setTimerRunning(true);
+        };
+
+        const handleTimerClick = () => {
+          clickCountRef.current += 1;
+          if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+          }
+          clickTimerRef.current = setTimeout(() => {
+            if (clickCountRef.current >= 3) {
+              resetTimer();
+            } else if (clickCountRef.current === 2) {
+              pauseTimer();
+            } else if (clickCountRef.current === 1 && !timerRunning) {
+              resumeTimer();
+            }
+            clickCountRef.current = 0;
+            clickTimerRef.current = null;
+          }, 250);
+        };
+
+        useEffect(() => {
+          return () => {
+            if (clickTimerRef.current) {
+              clearTimeout(clickTimerRef.current);
+            }
+          };
+        }, []);
 
         const resetTimer = () => {
           if (timerRef.current) {
@@ -1007,6 +1068,9 @@
             timerRef.current = setInterval(() => {
               setTimerSeconds((prev) => prev + 1);
             }, 1000);
+            setTimerRunning(true);
+          } else {
+            setTimerRunning(false);
           }
         };
 
@@ -1542,7 +1606,7 @@
                     </div>
                     <button
                       onClick={() => setDistractionFree(true)}
-                      className="hidden md:flex p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
+                      className="flex p-2 hover:bg-t-border rounded-full text-t-muted hover:text-t-text transition"
                       title="Distraction Free (Cmd/Ctrl+D)"
                     >
                       <Icon name="maximize" size={20} />
@@ -2158,9 +2222,13 @@
             {/* TIMER */}
             {activeTopic && !distractionFree && (
               <div
-                className="fixed bottom-4 right-4 z-[70] rounded-full border border-t-border bg-t-surface/95 px-3 py-2 shadow-2xl backdrop-blur-xl text-t-muted flex items-center gap-2 text-xs font-medium cursor-default select-none"
-                title="Double-click to restart timer"
-                onDoubleClick={resetTimer}
+                className="fixed bottom-4 right-4 z-[70] rounded-full border border-t-border bg-t-surface/95 px-3 py-2 shadow-2xl backdrop-blur-xl text-t-muted flex items-center gap-2 text-xs font-medium cursor-pointer select-none"
+                title={
+                  timerRunning
+                    ? "Double-click to pause, triple-click to reset"
+                    : "Click to resume, triple-click to reset"
+                }
+                onClick={handleTimerClick}
               >
                 <Icon name="clock" size={14} />
                 <span
