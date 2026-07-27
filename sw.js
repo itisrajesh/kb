@@ -1,5 +1,5 @@
-const CACHE_NAME = 'kb-cache-v2';
-const DYNAMIC_CACHE = 'kb-dynamic-v2';
+const CACHE_NAME = 'kb-cache-v3';
+const DYNAMIC_CACHE = 'kb-dynamic-v3';
 
 // Essential assets to precache.
 // We explicitly cache critical libs so the UI can load offline immediately.
@@ -19,10 +19,15 @@ const PRECACHE_URLS = [
   'https://cdn.jsdelivr.net/npm/prismjs/prism.min.js',
   'https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js',
   'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js',
+  
+  // Math rendering libraries (KaTeX + Marked Extension)
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
+  'https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v2...');
+  console.log(`[SW] Installing ${CACHE_NAME}...`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(async (cache) => {
@@ -45,7 +50,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating v2...');
+  console.log(`[SW] Activating ${CACHE_NAME}...`);
   const currentCaches = [CACHE_NAME, DYNAMIC_CACHE];
   
   event.waitUntil(
