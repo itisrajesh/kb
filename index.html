@@ -1971,24 +1971,6 @@
                                 {activeTopic.title}
                               </h1>
                             </div>
-
-                            {}
-                            {!editMode && (
-                              <div className="flex gap-2 mt-2">
-                                <button
-                                  onClick={() => setViewMode("content")}
-                                  className={`px-3 py-1 rounded-md text-xs font-medium transition ${viewMode === "content" ? "bg-t-accent text-t-accent-fg" : "bg-t-surface text-t-muted hover:text-t-text border border-t-border"}`}
-                                >
-                                  Content
-                                </button>
-                                <button
-                                  onClick={() => setViewMode("graph")}
-                                  className={`px-3 py-1 rounded-md text-xs font-medium transition ${viewMode === "graph" ? "bg-t-accent text-t-accent-fg" : "bg-t-surface text-t-muted hover:text-t-text border border-t-border"}`}
-                                >
-                                  Graph View
-                                </button>
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
@@ -2057,6 +2039,13 @@
                             >
                               <Icon name="edit-2" size={16} />{" "}
                               <span className="hidden sm:inline">Edit</span>
+                            </button>
+                            <button
+                              onClick={() => setViewMode(viewMode === "content" ? "graph" : "content")}
+                              className={`h-10 w-10 flex items-center justify-center rounded-lg border transition ${viewMode === "graph" ? "bg-t-accent text-t-accent-fg border-t-accent" : "bg-t-surface border-t-border text-t-muted hover:text-t-text"}`}
+                              title={viewMode === "graph" ? "Show Content" : "Show Graph"}
+                            >
+                              <Icon name={viewMode === "graph" ? "file-text" : "network"} size={20} />
                             </button>
                           </>
                         )}
