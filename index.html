@@ -1380,7 +1380,7 @@
         return (
           <div className="relative min-h-screen transition-colors duration-500">
             {/* BACKGROUND BLOBS - Preserved exactly as the original working version */}
-            {blobAnimationEnabled && !distractionFree && (
+            {blobAnimationEnabled && (
               <>
                 {isSafari ? (
                   <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -2203,15 +2203,15 @@
             {distractionFree && (
               <button
                 onClick={() => setDistractionFree(false)}
-                className="fixed top-4 right-4 z-[100] p-3 bg-t-surface/80 backdrop-blur border border-t-border rounded-full shadow-lg text-t-text hover:text-t-accent transition"
+                className="fixed top-4 right-4 z-[100] p-3 bg-t-surface/80 backdrop-blur border border-t-border rounded-full shadow-lg text-t-text hover:text-t-accent transition  text-t-muted"
                 title="Exit Distraction Free Mode (Cmd/Ctrl+D)"
               >
-                <Icon name="minimize-2" size={20} />
+                <Icon name="minimize-2" size={16} />
               </button>
             )}
 
             {/* TIMER */}
-            {activeTopic && !distractionFree && (
+            {activeTopic && (
               <div
                 className="fixed bottom-4 right-4 z-[70] rounded-full border border-t-border bg-t-surface/95 px-3 py-2 shadow-2xl backdrop-blur-xl text-t-muted flex items-center gap-2 text-xs font-medium cursor-pointer select-none"
                 title={
