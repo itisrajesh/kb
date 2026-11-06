@@ -665,7 +665,7 @@
             onClick={onClose}
           >
             <div
-              className="bg-t-surface border border-t-border rounded-xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden"
+              className="bg-t-surface border border-t-border rounded-xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden mx-4 md:mx-0"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
@@ -1932,7 +1932,7 @@
 
               {/* CONTENT AREA */}
               <main
-                className={`flex-1 ${distractionFree ? "p-4 md:p-12 min-h-screen max-w-4xl mx-auto pt-16 w-full" : "p-4 md:p-12 min-h-[calc(100vh-4rem)]"}`}
+                className={`flex-1 overflow-x-hidden max-w-full ${distractionFree ? "p-4 md:p-12 min-h-screen max-w-4xl mx-auto pt-16 w-full" : "p-4 md:p-12 min-h-[calc(100vh-4rem)]"}`}
               >
                 {activeTopic ? (
                   <div className="max-w-3xl mx-auto animate-fade-in pb-20">
